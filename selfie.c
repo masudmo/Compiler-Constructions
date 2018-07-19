@@ -727,7 +727,7 @@ void     decodeUFormat();
 uint64_t OP_LD     = 3;   // 0000011, I format (LD)
 uint64_t OP_IMM    = 19;  // 0010011, I format (ADDI, NOP)
 uint64_t OP_SD     = 35;  // 0100011, S format (SD)
-uint64_t OP_OP     = 51;  // 0110011, R format (ADD, SUB, MUL, DIVU, REMU, SLTU)
+uint64_t OP_OP     = 51;  // 0110011, R format (SRL, SLL, ADD, SUB, MUL, DIVU, REMU, SLTU)
 uint64_t OP_LUI    = 55;  // 0110111, U format (LUI)
 uint64_t OP_BRANCH = 99;  // 1100011, B format (BEQ)
 uint64_t OP_JALR   = 103; // 1100111, I format (JALR)
@@ -737,6 +737,8 @@ uint64_t OP_SYSTEM = 115; // 1110011, I format (ECALL)
 // f3-codes
 uint64_t F3_NOP   = 0; // 000
 uint64_t F3_ADDI  = 0; // 000
+uint64_t F3_SRL   = 5; // 101 hw1
+uint64_t F3_SLL   = 1; // 101 hw1
 uint64_t F3_ADD   = 0; // 000
 uint64_t F3_SUB   = 0; // 000
 uint64_t F3_MUL   = 0; // 000
@@ -750,6 +752,8 @@ uint64_t F3_JALR  = 0; // 000
 uint64_t F3_ECALL = 0; // 000
 
 // f7-codes
+uint64_t F7_SRL  = 0;  // 0000000 hw1
+uint64_t F7_SLL  = 0;  // 0000000 hw1
 uint64_t F7_ADD  = 0;  // 0000000
 uint64_t F7_MUL  = 1;  // 0000001
 uint64_t F7_SUB  = 32; // 0100000
@@ -794,6 +798,8 @@ void emitNOP();
 void emitLUI(uint64_t rd, uint64_t immediate);
 void emitADDI(uint64_t rd, uint64_t rs1, uint64_t immediate);
 
+void emitSRL(uint64_t rd, uint64_t rs1, uint64_t rs2); // hw1
+void emitSLL(uint64_t rd, uint64_t rs1, uint64_t rs2); // hw1
 void emitADD(uint64_t rd, uint64_t rs1, uint64_t rs2);
 void emitSUB(uint64_t rd, uint64_t rs1, uint64_t rs2);
 void emitMUL(uint64_t rd, uint64_t rs1, uint64_t rs2);
@@ -845,6 +851,8 @@ uint64_t ELF_ENTRY_POINT = 65536; // = 0x10000 (address of beginning of code)
 
 uint64_t ic_lui   = 0;
 uint64_t ic_addi  = 0;
+uint64_t ic_srl   = 0; // hw1
+uint64_t ic_sll   = 0; // hw1
 uint64_t ic_add   = 0;
 uint64_t ic_sub   = 0;
 uint64_t ic_mul   = 0;
@@ -994,18 +1002,20 @@ void printInstructionContext();
 void print_lui();
 void print_lui_before();
 void print_lui_after();
-void record_lui_addi_add_sub_mul_sltu_jal_jalr();
+void record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
 void do_lui();
-void undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+void undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
 
 void print_addi();
 void print_addi_before();
-void print_addi_add_sub_mul_divu_remu_sltu_after();
+void print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
 void do_addi();
 
-void print_add_sub_mul_divu_remu_sltu(uint64_t *mnemonics);
-void print_add_sub_mul_divu_remu_sltu_before();
+void print_srl_sll_add_sub_mul_divu_remu_sltu(uint64_t *mnemonics);
+void print_srl_sll_add_sub_mul_divu_remu_sltu_before();
 
+void do_srl(); // hw1
+void do_srl(); // hw1
 void do_add();
 void do_sub();
 void do_mul();
@@ -4731,6 +4741,8 @@ void decodeUFormat() {
 void resetInstructionCounters() {
   ic_lui   = 0;
   ic_addi  = 0;
+  ic_srl   = 0; // hw1
+  ic_sll   = 0; // hw1
   ic_add   = 0;
   ic_sub   = 0;
   ic_mul   = 0;
@@ -4746,8 +4758,8 @@ void resetInstructionCounters() {
 }
 
 uint64_t getTotalNumberOfInstructions() {
-  return ic_lui + ic_addi + ic_add + ic_sub + ic_mul + ic_divu + ic_remu + ic_sltu + ic_ld + ic_sd + ic_beq + ic_jal + ic_jalr + ic_ecall;
-}
+  return ic_lui + ic_addi + ic_srl + ic_sll + ic_add + ic_sub + ic_mul + ic_divu + ic_remu + ic_sltu + ic_ld + ic_sd + ic_beq + ic_jal + ic_jalr + ic_ecall;
+}                          // hw1     hw1
 
 void printInstructionCounter(uint64_t total, uint64_t counter, uint64_t* mnemonics) {
   print(mnemonics);
@@ -4779,6 +4791,10 @@ void printInstructionCounters() {
 
   print(selfieName);
   print((uint64_t*) ": compute: ");
+  printInstructionCounter(ic, ic_srl, (uint64_t*) "srl"); // hw1
+  print((uint64_t*) ", ");
+  printInstructionCounter(ic, ic_sll, (uint64_t*) "sll"); // hw1
+  print((uint64_t*) ", ");
   printInstructionCounter(ic, ic_add, (uint64_t*) "add");
   print((uint64_t*) ", ");
   printInstructionCounter(ic, ic_sub, (uint64_t*) "sub");
@@ -4873,6 +4889,19 @@ void emitADDI(uint64_t rd, uint64_t rs1, uint64_t immediate) {
   ic_addi = ic_addi + 1;
 }
 
+// hw1{
+void emitSRL(uint64_t rd, uint64_t rs1, uint64_t rs2) {
+  emitInstruction(encodeRFormat(F7_SRL, rs2, rs1, F3_SRL, rd, OP_OP));
+
+  ic_srl = ic_srl + 1;
+}
+// } hw1 {
+void emitSLL(uint64_t rd, uint64_t rs1, uint64_t rs2) {
+  emitInstruction(encodeRFormat(F7_SLL, rs2, rs1, F3_SLL, rd, OP_OP));
+
+  ic_sll = ic_sll + 1;
+}
+// }
 void emitADD(uint64_t rd, uint64_t rs1, uint64_t rs2) {
   emitInstruction(encodeRFormat(F7_ADD, rs2, rs1, F3_ADD, rd, OP_OP));
 
@@ -6032,7 +6061,7 @@ void print_lui_after() {
   printRegisterHexadecimal(rd);
 }
 
-void record_lui_addi_add_sub_mul_sltu_jal_jalr() {
+void record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr() {
   recordState(*(registers + rd));
 }
 
@@ -6048,7 +6077,7 @@ void do_lui() {
   ic_lui = ic_lui + 1;
 }
 
-void undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr() {
+void undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr() {
   *(registers + rd) = *(values + (tc % maxTraceLength));
 }
 
@@ -6078,7 +6107,7 @@ void print_addi_before() {
   printRegisterValue(rd);
 }
 
-void print_addi_add_sub_mul_divu_remu_sltu_after() {
+void print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after() {
   print((uint64_t*) " -> ");
   printRegisterValue(rd);
 }
@@ -6095,7 +6124,7 @@ void do_addi() {
   ic_addi = ic_addi + 1;
 }
 
-void print_add_sub_mul_divu_remu_sltu(uint64_t *mnemonics) {
+void print_srl_sll_add_sub_mul_divu_remu_sltu(uint64_t *mnemonics) {
   printInstructionContext();
 
   print(mnemonics);
@@ -6107,7 +6136,7 @@ void print_add_sub_mul_divu_remu_sltu(uint64_t *mnemonics) {
   printRegister(rs2);
 }
 
-void print_add_sub_mul_divu_remu_sltu_before() {
+void print_srl_sll_add_sub_mul_divu_remu_sltu_before() {
   print((uint64_t*) ": ");
   printRegisterValue(rs1);
   print((uint64_t*) ",");
@@ -6115,6 +6144,29 @@ void print_add_sub_mul_divu_remu_sltu_before() {
   print((uint64_t*) " |- ");
   printRegisterValue(rd);
 }
+
+// hw1 {
+void do_srl() {
+  if (rd != REG_ZR)
+    // semantics of srl
+    *(registers + rd) = rightShift( *(registers + rs1) , *(registers + rs2));
+
+  pc = pc + INSTRUCTIONSIZE;
+
+  ic_srl = ic_srl + 1;
+}
+// }
+// hw1 {
+void do_sll() {
+  if (rd != REG_ZR)
+    // semantics of sll
+    *(registers + rd) = leftShift( *(registers + rs1) , *(registers + rs2));
+
+  pc = pc + INSTRUCTIONSIZE;
+
+  ic_sll = ic_sll + 1;
+}
+// }
 
 void do_add() {
   if (rd != REG_ZR)
@@ -6679,16 +6731,16 @@ void decode_execute() {
     if (funct3 == F3_ADDI) {
       if (debug) {
         if (record) {
-          record_lui_addi_add_sub_mul_sltu_jal_jalr();
+          record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
           do_addi();
         } else if (undo)
-          undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+          undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
         else if (disassemble) {
           print_addi();
           if (execute) {
             print_addi_before();
             do_addi();
-            print_addi_add_sub_mul_divu_remu_sltu_after();
+            print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
           }
           println();
         }
@@ -6706,7 +6758,7 @@ void decode_execute() {
           record_ld();
           do_ld();
         } else if (undo)
-          undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+          undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
         else if (disassemble) {
           print_ld();
           if (execute) {
@@ -6750,14 +6802,14 @@ void decode_execute() {
       if (funct7 == F7_ADD) {
         if (debug) {
           if (record) {
-            record_lui_addi_add_sub_mul_sltu_jal_jalr();
+            record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
             do_add();
           } else if (disassemble) {
-            print_add_sub_mul_divu_remu_sltu((uint64_t*) "add");
+            print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "add");
             if (execute) {
-              print_add_sub_mul_divu_remu_sltu_before();
+              print_srl_sll_add_sub_mul_divu_remu_sltu_before();
               do_add();
-              print_addi_add_sub_mul_divu_remu_sltu_after();
+              print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
             }
             println();
           }
@@ -6768,16 +6820,16 @@ void decode_execute() {
       } else if (funct7 == F7_SUB) {
         if (debug) {
           if (record) {
-            record_lui_addi_add_sub_mul_sltu_jal_jalr();
+            record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
             do_sub();
           } else if (undo)
-            undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+            undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
           else if (disassemble) {
-            print_add_sub_mul_divu_remu_sltu((uint64_t*) "sub");
+            print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "sub");
             if (execute) {
-              print_add_sub_mul_divu_remu_sltu_before();
+              print_srl_sll_add_sub_mul_divu_remu_sltu_before();
               do_sub();
-              print_addi_add_sub_mul_divu_remu_sltu_after();
+              print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
             }
             println();
           }
@@ -6788,16 +6840,16 @@ void decode_execute() {
       } else if (funct7 == F7_MUL) {
         if (debug) {
           if (record) {
-            record_lui_addi_add_sub_mul_sltu_jal_jalr();
+            record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
             do_mul();
           } else if (undo)
-            undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+            undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
           else if (disassemble) {
-            print_add_sub_mul_divu_remu_sltu((uint64_t*) "mul");
+            print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "mul");
             if (execute) {
-              print_add_sub_mul_divu_remu_sltu_before();
+              print_srl_sll_add_sub_mul_divu_remu_sltu_before();
               do_mul();
-              print_addi_add_sub_mul_divu_remu_sltu_after();
+              print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
             }
             println();
           }
@@ -6806,20 +6858,45 @@ void decode_execute() {
 
         return;
       }
-    } else if (funct3 == F3_DIVU) {
+    }
+
+    else if (funct3 == F3_SLL) {
+      if (funct7 == F7_SLL) {
+        if (debug) {
+          if (record) {
+            record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
+            do_sll();
+          } else if (undo)
+            undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+          else if (disassemble) {
+            print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "sll");
+            if (execute) {
+              print_srl_sll_add_sub_mul_divu_remu_sltu_before();
+              do_sll();
+              print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
+            }
+            println();
+          }
+        } else
+          do_sll();
+
+        return;
+      }
+    } // }hw1 sll end
+    else if (funct3 == F3_DIVU) {
       if (funct7 == F7_DIVU) {
         if (debug) {
           if (record) {
             record_divu_remu();
             do_divu();
           } else if (undo)
-            undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+            undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
           else if (disassemble) {
-            print_add_sub_mul_divu_remu_sltu((uint64_t*) "divu");
+            print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "divu");
             if (execute) {
-              print_add_sub_mul_divu_remu_sltu_before();
+              print_srl_sll_add_sub_mul_divu_remu_sltu_before();
               do_divu();
-              print_addi_add_sub_mul_divu_remu_sltu_after();
+              print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
             }
             println();
           }
@@ -6827,21 +6904,43 @@ void decode_execute() {
           do_divu();
 
         return;
-      }
-    } else if (funct3 == F3_REMU) {
+      }// hw1 {
+        else if (funct7 == F7_SRL) {
+          if (debug) {
+            if (record) {
+              record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
+              do_srl();
+            } else if (undo)
+              undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+            else if (disassemble) {
+              print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "srl");
+              if (execute) {
+                print_srl_sll_add_sub_mul_divu_remu_sltu_before();
+                do_srl();
+                print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
+              }
+              println();
+            }
+          } else
+            do_srl();
+
+          return;
+        }
+      } // }hw1 srl end
+     else if (funct3 == F3_REMU) {
       if (funct7 == F7_REMU) {
         if (debug) {
           if (record) {
             record_divu_remu();
             do_remu();
           } else if (undo)
-            undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+            undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
           else if (disassemble) {
-            print_add_sub_mul_divu_remu_sltu((uint64_t*) "remu");
+            print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "remu");
             if (execute) {
-              print_add_sub_mul_divu_remu_sltu_before();
+              print_srl_sll_add_sub_mul_divu_remu_sltu_before();
               do_remu();
-              print_addi_add_sub_mul_divu_remu_sltu_after();
+              print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
             }
             println();
           }
@@ -6854,16 +6953,16 @@ void decode_execute() {
       if (funct7 == F7_SLTU) {
         if (debug) {
           if (record) {
-            record_lui_addi_add_sub_mul_sltu_jal_jalr();
+            record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
             do_sltu();
           } else if (undo)
-            undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+            undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
           else if (disassemble) {
-            print_add_sub_mul_divu_remu_sltu((uint64_t*) "sltu");
+            print_srl_sll_add_sub_mul_divu_remu_sltu((uint64_t*) "sltu");
             if (execute) {
-              print_add_sub_mul_divu_remu_sltu_before();
+              print_srl_sll_add_sub_mul_divu_remu_sltu_before();
               do_sltu();
-              print_addi_add_sub_mul_divu_remu_sltu_after();
+              print_addi_srl_sll_add_sub_mul_divu_remu_sltu_after();
             }
             println();
           }
@@ -6900,10 +6999,10 @@ void decode_execute() {
 
     if (debug) {
       if (record) {
-        record_lui_addi_add_sub_mul_sltu_jal_jalr();
+        record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
         do_jal();
       } else if (undo)
-        undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+        undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
       else if (disassemble) {
         print_jal();
         if (execute) {
@@ -6923,10 +7022,10 @@ void decode_execute() {
     if (funct3 == F3_JALR) {
       if (debug) {
         if (record) {
-          record_lui_addi_add_sub_mul_sltu_jal_jalr();
+          record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
           do_jalr();
         } else if (undo)
-          undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+          undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
         else if (disassemble) {
           print_jalr();
           if (execute) {
@@ -6946,10 +7045,10 @@ void decode_execute() {
 
     if (debug) {
       if (record) {
-        record_lui_addi_add_sub_mul_sltu_jal_jalr();
+        record_lui_addi_srl_sll_add_sub_mul_sltu_jal_jalr();
         do_lui();
       } else if (undo)
-        undo_lui_addi_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
+        undo_lui_addi_srl_sll_add_sub_mul_divu_remu_sltu_ld_jal_jalr();
       else if (disassemble) {
         print_lui();
         if (execute) {
