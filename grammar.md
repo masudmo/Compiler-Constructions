@@ -47,7 +47,7 @@ literal          = integer | character .
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-variable         = type identifier .
+variable         = type identifier [ "=" [ cast ] [ "-" ] literal ] .
 
 statement        = call ";" | while | if | return ";" |
                    ( [ "*" ] identifier | "*" "(" expression ")" )
