@@ -85,7 +85,7 @@
 // ----------------------- BUILTIN PROCEDURES ----------------------
 // -----------------------------------------------------------------
 
-void      exit(uint64_t code);
+void exit(uint64_t code);
 uint64_t  read(uint64_t fd, uint64_t* buffer, uint64_t bytesToRead);
 uint64_t  write(uint64_t fd, uint64_t* buffer, uint64_t bytesToWrite);
 uint64_t  open(uint64_t* filename, uint64_t flags, uint64_t mode);
@@ -186,6 +186,9 @@ uint64_t INT64_MIN; // minimum numerical value of a signed 64-bit integer
 uint64_t UINT64_MAX; // maximum numerical value of an unsigned 64-bit integer
 
 uint64_t maxFilenameLength = 128;
+//Proect helpvariable to make different ob es local var or parameter
+uint64_t  parameterVariable = 0;
+uint64_t  offsetHilf = 0;
 
 uint64_t* character_buffer; // buffer for reading and writing characters
 uint64_t* integer_buffer;   // buffer for printing integers
@@ -225,7 +228,10 @@ uint64_t  outputFD   = 1;
 // ------------------------- INITIALIZATION ------------------------
 
 void initLibrary() {
-  uint64_t i;
+  //Project local initialisation
+  uint64_t i ;
+  //uint64_t ho = 20;
+//printInteger(i);
 
   // powers of two table with CPUBITWIDTH entries for 2^0 to 2^(CPUBITWIDTH - 1)
   power_of_two_table = smalloc(CPUBITWIDTH * SIZEOFUINT64);
@@ -370,6 +376,7 @@ uint64_t  sourceFD   = 0;             // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
+    //27 +1 *8
   SYMBOLS = smalloc((SYM_STRING + 1) * SIZEOFUINT64STAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (uint64_t) "identifier";
@@ -547,6 +554,7 @@ void     compile_return();
 void     compile_statement();
 uint64_t compile_type();
 void     compile_variable(uint64_t offset);
+void compile_hilf();
 uint64_t compile_initialization(uint64_t type);
 void     compile_procedure(uint64_t* procedure, uint64_t type);
 void     compile_cstar();
@@ -818,6 +826,7 @@ void fixlink_relative(uint64_t fromAddress, uint64_t toAddress);
 uint64_t copyStringToBinary(uint64_t* s, uint64_t a);
 
 void emitGlobalsStrings();
+//void emitLocal();
 
 uint64_t* createELFHeader(uint64_t binaryLength);
 uint64_t  parseELFHeader(uint64_t* header);
@@ -1503,10 +1512,11 @@ uint64_t rightShift(uint64_t n, uint64_t b) {
   // assert: 0 <= b < CPUBITWIDTH
   return n / twoToThePowerOf(b);
 }
-
+//zahl..wie viel bits
 uint64_t getBits(uint64_t n, uint64_t i, uint64_t b) {
   // assert: 0 < b <= i + b < CPUBITWIDTH
   if (i == 0)
+
     return n % twoToThePowerOf(b);
   else
     // shift to-be-loaded bits all the way to the left
@@ -1548,6 +1558,7 @@ uint64_t signedDivision(uint64_t a, uint64_t b) {
       return INT64_MIN / abs(b);
     else
       return -(INT64_MIN / b);
+      //a!= INT64_MIN)
   else if (b == INT64_MIN)
     return 0;
   else if (signedLessThan(a, 0))
@@ -1555,6 +1566,7 @@ uint64_t signedDivision(uint64_t a, uint64_t b) {
       return abs(a) / abs(b);
     else
       return -(abs(a) / b);
+      //a !(signedLessThan(a, 0)
   else if (signedLessThan(b, 0))
     return -(a / abs(b));
   else
@@ -3687,6 +3699,7 @@ void compile_return() {
 }
 
 void compile_statement() {
+  //uint64_t mo = 20;
   uint64_t ltype;
   uint64_t rtype;
   uint64_t* variableOrProcedureName;
@@ -3879,6 +3892,59 @@ uint64_t compile_type() {
   return type;
 }
 
+
+void compile_hilf(uint64_t offset) {
+  uint64_t type;
+  uint64_t initialValue;
+  uint64_t* entry;
+  uint64_t offsetAdd;
+  uint64_t ltype;
+  uint64_t rtype;
+  uint64_t* variableOrProcedureName;
+
+
+
+  type = compile_type();
+
+  if (symbol == SYM_IDENTIFIER) {
+    variableOrProcedureName = identifier;
+
+      getSymbol();
+
+
+     if (symbol == SYM_SEMICOLON) {
+        initialValue = 0;
+
+         createSymbolTableEntry(LOCAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type,initialValue, offset);
+
+
+      }
+      else if (symbol == SYM_ASSIGN){
+
+     initialValue = compile_initialization(type);
+      createSymbolTableEntry(LOCAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type,initialValue, offset);
+
+       entry = searchSymbolTable(local_symbol_table,variableOrProcedureName, VARIABLE);
+
+       //       emitSD(offset,REG_FP,getValue(entry));
+       //       printInteger(getValue(entry));
+       // println();
+       // println();
+
+      }
+
+
+
+
+
+  } else {
+    syntaxErrorSymbol(SYM_IDENTIFIER);
+
+    createSymbolTableEntry(LOCAL_TABLE, (uint64_t*) "missing variable name", lineNumber, VARIABLE, type,0, offset);
+  }
+//return 0;
+}
+
 void compile_variable(uint64_t offset) {
   uint64_t type;
 
@@ -3895,6 +3961,7 @@ void compile_variable(uint64_t offset) {
     createSymbolTableEntry(LOCAL_TABLE, (uint64_t*) "missing variable name", lineNumber, VARIABLE, type, 0, offset);
   }
 }
+
 
 uint64_t compile_initialization(uint64_t type) {
   uint64_t initialValue;
@@ -3939,10 +4006,10 @@ uint64_t compile_initialization(uint64_t type) {
     else
       syntaxErrorUnexpected();
 
-    if (symbol == SYM_SEMICOLON)
-      getSymbol();
-    else
-      syntaxErrorSymbol(SYM_SEMICOLON);
+    // if (symbol == SYM_SEMICOLON)
+    //   getSymbol();
+    // else
+    //   syntaxErrorSymbol(SYM_SEMICOLON);
   } else
     syntaxErrorSymbol(SYM_ASSIGN);
 
@@ -3955,12 +4022,14 @@ uint64_t compile_initialization(uint64_t type) {
   return initialValue;
 }
 
+
 void compile_procedure(uint64_t* procedure, uint64_t type) {
   uint64_t isUndefined;
   uint64_t numberOfParameters;
   uint64_t parameters;
   uint64_t localVariables;
   uint64_t* entry;
+  uint64_t* entry_hilf;
 
   // assuming procedure is undefined
   isUndefined = 1;
@@ -3972,11 +4041,13 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
     getSymbol();
 
     if (symbol != SYM_RPARENTHESIS) {
+      parameterVariable = 1;
       compile_variable(0);
 
       numberOfParameters = 1;
 
       while (symbol == SYM_COMMA) {
+
         getSymbol();
 
         compile_variable(0);
@@ -4065,18 +4136,25 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
     localVariables = 0;
 
     while (symbol == SYM_UINT64) {
-      localVariables = localVariables + 1;
+      parameterVariable = 0;
+     localVariables = localVariables + 1;
+     compile_hilf(-localVariables * REGISTERSIZE);
 
-      compile_variable(-localVariables * REGISTERSIZE);
-
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
+        if (symbol == SYM_SEMICOLON)
+         getSymbol();
+        else
+         syntaxErrorSymbol(SYM_SEMICOLON);
     }
 
     help_procedure_prologue(localVariables);
-
+    entry_hilf=local_symbol_table;
+    while(localVariables > 0){
+  		load_integer(getValue(entry_hilf));
+  		emitSD(REG_FP,getAddress(entry_hilf),currentTemporary());
+  		entry_hilf=getNextEntry(entry_hilf);
+  		tfree(1);
+      localVariables=localVariables - 1;
+  	}
     // create a fixup chain for return statements
     returnBranches = 0;
 
@@ -4162,11 +4240,15 @@ void compile_cstar() {
             getSymbol();
 
             initialValue = 0;
-          } else
+          } else{
             // type identifier "=" ...
             // global variable definition
             initialValue = compile_initialization(type);
-
+            if (symbol == SYM_SEMICOLON)
+              getSymbol();
+            else
+             syntaxErrorSymbol(SYM_SEMICOLON);
+           }
           entry = searchSymbolTable(global_symbol_table, variableOrProcedureName, VARIABLE);
 
           if (entry == (uint64_t*) 0) {
@@ -4335,8 +4417,9 @@ void selfie_compile() {
 
       resetScanner();
       resetParser();
-
+      //compile_hilf();
       compile_cstar();
+
 
       print(selfieName);
       print((uint64_t*) ": ");
@@ -4391,7 +4474,7 @@ void selfie_compile() {
   }
 
   emitStart();
-
+  //emitLocal();
   emitGlobalsStrings();
 
   ELF_header = createELFHeader(binaryLength);
@@ -5025,6 +5108,35 @@ void emitGlobalsStrings() {
 
   allocatedMemory = 0;
 }
+// void emitLocal() {
+//   uint64_t* entry;
+//
+//   entry = local_symbol_table;
+//
+//   // assert: n = binaryLength
+//
+//   // allocate space for global variables and copy strings and big integers
+//   while ((uint64_t) entry != 0) {
+//     if (getClass(entry) == VARIABLE) {
+//       storeData(binaryLength, getValue(entry));
+//
+//       binaryLength = binaryLength + REGISTERSIZE;
+//     }
+//     // else if (getClass(entry) == STRING)
+//     //   binaryLength = copyStringToBinary(getString(entry), binaryLength);
+//     // else if (getClass(entry) == BIGINT) {
+//     //   storeData(binaryLength, getValue(entry));
+//
+//     //  binaryLength = binaryLength + REGISTERSIZE;
+//   //  }
+//
+//     entry = getNextEntry(entry);
+//   }
+//
+//   // assert: binaryLength == n + allocatedMemory
+//
+//   allocatedMemory = 0;
+// }
 
 uint64_t* createELFHeader(uint64_t binaryLength) {
   uint64_t* header;
@@ -8448,9 +8560,8 @@ uint64_t main(uint64_t argc, uint64_t* argv) {
   initSelfie((uint64_t) argc, (uint64_t*) argv);
 
   initLibrary();
-
-  print((uint64_t*)"This is Mostafa Masud`s Selfie");
-  println();
+    print((uint64_t*) "This is Mostafa Masud's Selfie");
+    println();
 
   return signShrink(selfie(), SYSCALL_BITWIDTH);
 }
