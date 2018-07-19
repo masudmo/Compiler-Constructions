@@ -172,8 +172,10 @@ uint64_t CHAR_EXCLAMATION  = '!';
 uint64_t CHAR_PERCENTAGE   = '%';
 uint64_t CHAR_SINGLEQUOTE  =  39; // ASCII code 39 = '
 uint64_t CHAR_DOUBLEQUOTE  = '"';
-uint64_t CHAR_LBRACKET     = '['; // hw3
-uint64_t CHAR_RBRACKET     = ']'; // hw3
+//hw3 start
+uint64_t  CHAR_LBRACKET  = '[';
+uint64_t  CHAR_RBRACKET  = ']';
+//hw3 end
 
 uint64_t CPUBITWIDTH = 64;
 
@@ -216,6 +218,34 @@ uint64_t WINDOWS_O_BINARY_CREAT_TRUNC_WRONLY = 33537;
 // 420 = 00644 = S_IRUSR (00400) | S_IWUSR (00200) | S_IRGRP (00040) | S_IROTH (00004)
 // these flags seem to be working for LINUX, MAC, and WINDOWS
 uint64_t S_IRUSR_IWUSR_IRGRP_IROTH = 420;
+// types
+// type structs for basic types
+
+
+struct type_t {
+  uint64_t type;
+  struct symbol_table_t * definition;
+  uint64_t* structName;
+  struct dimension_t * dimensions;
+  struct field_t * fields;
+};
+
+struct type_t *newTypeStruct()      { return (struct type_t *) malloc(5 * SIZEOFUINT64); }
+
+struct dimension_t {
+  struct dimension_t * next;
+  uint64_t size;
+};
+struct dimension_t *newDimensionEntry() { return (struct dimension_t *) malloc(2 * SIZEOFUINT64); }
+struct field_t {
+  struct field_t * next;
+  uint64_t* name;
+  struct type_t * type;
+  uint64_t offset;
+};
+
+struct field_t *newFieldListEntry()      { return (struct field_t *) malloc(4 * SIZEOFUINT64); }
+
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -239,7 +269,7 @@ void initLibrary() {
 
   while (i < CPUBITWIDTH) {
     // compute powers of two incrementally using this recurrence relation
-    // *(power_of_two_table + i) = *(power_of_two_table + (i - 1)) * 2;
+  //  *(power_of_two_table + i) = *(power_of_two_table + (i - 1)) * 2;
     power_of_two_table[i] = power_of_two_table[i-1] * 2;
 
     i = i + 1;
@@ -272,6 +302,7 @@ void initLibrary() {
 void resetLibrary() {
   numberOfWrittenCharacters = 0;
 }
+
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
 // -----------------------------------------------------------------
@@ -341,14 +372,16 @@ uint64_t SYM_NOTEQ               = 24; // !=
 uint64_t SYM_MOD                 = 25; // %
 uint64_t SYM_CHARACTER           = 26; // character
 uint64_t SYM_STRING              = 27; // string
-uint64_t SYM_BITWISELEFTSHIFT	   = 28; // << // hw2
-uint64_t SYM_BITWISERIGHTSHIFT   = 29; // >> // hw2
-uint64_t SYM_LBRACKET            = 30; // [  // hw3
-uint64_t SYM_RBRACKET            = 31; // ]  // hw3
+uint64_t  SYM_BITWISELEFTSHIFT	 = 28; // <<    // hw2
+uint64_t  SYM_BITWISERIGHTSHIFT  = 29; // >>    // hw2
+uint64_t SYM_LBRACKET            = 30; // [     // hw3
+uint64_t  SYM_RBRACKET           = 31; // ]     // hw3
+uint64_t  SYM_STRUCT             = 32;//struct // hw4
+uint64_t SYM_ARROW               = 33; // ->    // hw4
 
 uint64_t* SYMBOLS; // strings representing symbols
-
-uint64_t hilfbits; // hw3
+uint64_t  hilfbits = 0;
+uint64_t  help_variable = 0;
 
 uint64_t maxIdentifierLength = 64;  // maximum number of characters in an identifier
 uint64_t maxIntegerLength    = 20;  // maximum number of characters in an unsigned integer
@@ -384,41 +417,44 @@ uint64_t  sourceFD   = 0;             // file descriptor of open source file
 void initScanner () {
     //27 +1 *8
     //29 +1*8
-    //HW2
-  SYMBOLS = smalloc((SYM_RBRACKET + 1) * SIZEOFUINT64STAR);
+    // hw2 -> hw3 -> hw4
+  SYMBOLS = smalloc((SYM_ARROW + 1) * SIZEOFUINT64STAR);
 
-  *(SYMBOLS + SYM_IDENTIFIER)          = (uint64_t) "identifier";
-  *(SYMBOLS + SYM_INTEGER)             = (uint64_t) "integer";
-  *(SYMBOLS + SYM_VOID)                = (uint64_t) "void";
-  *(SYMBOLS + SYM_UINT64)              = (uint64_t) "uint64_t";
-  *(SYMBOLS + SYM_SEMICOLON)           = (uint64_t) ";";
-  *(SYMBOLS + SYM_IF)                  = (uint64_t) "if";
-  *(SYMBOLS + SYM_ELSE)                = (uint64_t) "else";
-  *(SYMBOLS + SYM_PLUS)                = (uint64_t) "+";
-  *(SYMBOLS + SYM_MINUS)               = (uint64_t) "-";
-  *(SYMBOLS + SYM_ASTERISK)            = (uint64_t) "*";
-  *(SYMBOLS + SYM_DIV)                 = (uint64_t) "/";
-  *(SYMBOLS + SYM_EQUALITY)            = (uint64_t) "==";
-  *(SYMBOLS + SYM_ASSIGN)              = (uint64_t) "=";
-  *(SYMBOLS + SYM_LPARENTHESIS)        = (uint64_t) "(";
-  *(SYMBOLS + SYM_RPARENTHESIS)        = (uint64_t) ")";
-  *(SYMBOLS + SYM_LBRACE)              = (uint64_t) "{";
-  *(SYMBOLS + SYM_RBRACE)              = (uint64_t) "}";
-  *(SYMBOLS + SYM_WHILE)               = (uint64_t) "while";
-  *(SYMBOLS + SYM_RETURN)              = (uint64_t) "return";
-  *(SYMBOLS + SYM_COMMA)               = (uint64_t) ",";
-  *(SYMBOLS + SYM_LT)                  = (uint64_t) "<";
-  *(SYMBOLS + SYM_LEQ)                 = (uint64_t) "<=";
-  *(SYMBOLS + SYM_GT)                  = (uint64_t) ">";
-  *(SYMBOLS + SYM_GEQ)                 = (uint64_t) ">=";
-  *(SYMBOLS + SYM_NOTEQ)               = (uint64_t) "!=";
-  *(SYMBOLS + SYM_MOD)                 = (uint64_t) "%";
-  *(SYMBOLS + SYM_CHARACTER)           = (uint64_t) "character";
-  *(SYMBOLS + SYM_STRING)              = (uint64_t) "string";
-  *(SYMBOLS + SYM_BITWISELEFTSHIFT)    = (uint64_t) "<<"; // hw2
-  *(SYMBOLS + SYM_BITWISERIGHTSHIFT)   = (uint64_t) ">>"; // hw2
-  *(SYMBOLS + SYM_LBRACKET)            = (uint64_t) "[";  // hw3
-  *(SYMBOLS + SYM_RBRACKET)            = (uint64_t) "]";  // hw3
+  *(SYMBOLS + SYM_IDENTIFIER)       = (uint64_t) "identifier";
+  *(SYMBOLS + SYM_INTEGER)          = (uint64_t) "integer";
+  *(SYMBOLS + SYM_VOID)             = (uint64_t) "void";
+  *(SYMBOLS + SYM_UINT64)           = (uint64_t) "uint64_t";
+  *(SYMBOLS + SYM_SEMICOLON)        = (uint64_t) ";";
+  *(SYMBOLS + SYM_IF)               = (uint64_t) "if";
+  *(SYMBOLS + SYM_ELSE)             = (uint64_t) "else";
+  *(SYMBOLS + SYM_PLUS)             = (uint64_t) "+";
+  *(SYMBOLS + SYM_MINUS)            = (uint64_t) "-";
+  *(SYMBOLS + SYM_ASTERISK)         = (uint64_t) "*";
+  *(SYMBOLS + SYM_DIV)              = (uint64_t) "/";
+  *(SYMBOLS + SYM_EQUALITY)         = (uint64_t) "==";
+  *(SYMBOLS + SYM_ASSIGN)           = (uint64_t) "=";
+  *(SYMBOLS + SYM_LPARENTHESIS)     = (uint64_t) "(";
+  *(SYMBOLS + SYM_RPARENTHESIS)     = (uint64_t) ")";
+  *(SYMBOLS + SYM_LBRACE)           = (uint64_t) "{";
+  *(SYMBOLS + SYM_RBRACE)           = (uint64_t) "}";
+  *(SYMBOLS + SYM_WHILE)            = (uint64_t) "while";
+  *(SYMBOLS + SYM_RETURN)           = (uint64_t) "return";
+  *(SYMBOLS + SYM_COMMA)            = (uint64_t) ",";
+  *(SYMBOLS + SYM_LT)               = (uint64_t) "<";
+  *(SYMBOLS + SYM_LEQ)              = (uint64_t) "<=";
+  *(SYMBOLS + SYM_GT)               = (uint64_t) ">";
+  *(SYMBOLS + SYM_GEQ)              = (uint64_t) ">=";
+  *(SYMBOLS + SYM_NOTEQ)            = (uint64_t) "!=";
+  *(SYMBOLS + SYM_MOD)              = (uint64_t) "%";
+  *(SYMBOLS + SYM_CHARACTER)        = (uint64_t) "character";
+  *(SYMBOLS + SYM_STRING)           = (uint64_t) "string";
+  *(SYMBOLS + SYM_BITWISELEFTSHIFT) = (uint64_t) "<<";    // hw2
+  *(SYMBOLS + SYM_BITWISERIGHTSHIFT)= (uint64_t) ">>";    // hw2
+  *(SYMBOLS + SYM_LBRACKET)         = (uint64_t) "[";     // hw3
+  *(SYMBOLS + SYM_RBRACKET)         = (uint64_t) "]";     // hw3
+  *(SYMBOLS + SYM_STRUCT)           = (uint64_t) "struct";// hw4
+  *(SYMBOLS + SYM_ARROW)            = (uint64_t) "->";    // hw4
+
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -440,108 +476,221 @@ void resetScanner() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
+struct symbol_table_t {
+  struct symbol_table_t * next;        //0
+  uint64_t* string;                    //1
+  uint64_t line;                       //2
+  uint64_t class;                      //3
+  struct type_t * typeStruct;          //4
+  uint64_t value;                      //5
+  uint64_t address;                    //6
+  uint64_t scope;                      //7
+  uint64_t numberOfDimensions;         //8
+  uint64_t totalSize;                  //9
+};
+// symbol table entry:
+// +----+------------+
+// |  0 | next       | pointer to next entry
+// |  1 | string     | identifier string, string literal
+// |  2 | line#      | source line number
+// |  3 | class      | VARIABLE, PROCEDURE, STRING
+// |  4 | type       | type pointer (INT_T, INTSTAR_T, VOID_T...)
+// |  5 | value      | VARIABLE: initial value
+// |  6 | address    | VARIABLE: offset, PROCEDURE: address, STRING: offset
+// |  7 | scope      | REG_GP, REG_FP
+// |  8 | size       | ARRAY: lengths of dimensions
+// |  9 | dimensions | ARRAY: number of dimensions
+// +----+------------+
+//struct symbol_table_t* getNextEntry(struct symbol_table_t* entry)        { return  entry -> next; }
+//uint64_t* getString(struct symbol_table_t* entry)                        { return  entry -> string; }
+//uint64_t  getLineNumber(struct symbol_table_t* entry)                    { return  entry -> line; }
+//uint64_t  getClass(struct symbol_table_t* entry)                         { return  entry -> class; }
+//struct type_t* getTypeStruct(struct symbol_table_t* entry)               { return  entry -> typeStruct; }
+//uint64_t  getValue(struct symbol_table_t* entry)                         { return  entry -> value; }
+//uint64_t  getAddress(struct symbol_table_t* entry)                       { return  entry -> address; }
+//uint64_t  getScope(struct symbol_table_t* entry)                         { return  entry -> scope; }
+//uint64_t  getNumbOfDim(struct symbol_table_t* entry)                     { return  entry -> numberOfDimensions; }
+//uint64_t  getTotalSize(struct symbol_table_t* entry)                     { return  entry -> totalSize; }
+
+//void setNextEntry(struct symbol_table_t* entry, struct symbol_table_t* next)         { entry -> next               = next; }
+//void setString(struct symbol_table_t* entry, uint64_t* identifier)                   { entry -> string             = identifier; }
+//void setLineNumber(struct symbol_table_t* entry, uint64_t line)                      { entry -> line               = line; }
+//void setClass(struct symbol_table_t* entry, uint64_t class)                          { entry -> class              = class; }
+//void setTypeStruct(struct symbol_table_t* entry, struct type_t* type)                { entry -> typeStruct         = type; }
+//void setValue(struct symbol_table_t* entry, uint64_t value)                          { entry -> value              = value; }
+//void setAddress(struct symbol_table_t* entry, uint64_t address)                      { entry -> address            = address; }
+//void setScope(struct symbol_table_t* entry, uint64_t scope)                          { entry -> scope              = scope; }
+//void setNumbOfDim(struct symbol_table_t* entry, uint64_t dim)                        { entry -> numberOfDimensions = dim; }
+//void setTotalSize(struct symbol_table_t* entry, uint64_t size)                       { entry -> totalSize          = size; }
+
+// type:
+// +----+------------+
+// |  0 | next       | pointer to next entry
+// |  1 | name       | identifier string, string literal
+// |  2 | typeValue  | INT_T, INTSTAR_T, VOID_T, STRUCT_T, STRUCTSTAR_T
+// |  3 | size       | total size in words
+// |  4 | fields     | STRUCT: fields
+// +----+------------+
+
+
+//uint64_t getType(struct type_t* entry)                                { return  entry -> type; }
+//struct symbol_table_t* getDefintion(struct type_t* entry)             { return  entry -> definition; }
+//uint64_t* getStructName(struct type_t* entry)                         { return  entry -> structName; }
+//struct dimension_t* getDimensions(struct type_t* entry)               { return  entry -> dimensions; }
+//struct field_t* getFields(struct type_t* entry)                       { return  entry -> fields; }
+// STRUCT_T, STRUCTSTAR_T
+//void setType(struct type_t* entry, uint64_t type)                     { entry -> type       = type; }
+//entry
+//void setDefination(struct type_t* entry, struct symbol_table_t* def)  { entry -> definition = def; }
+// STRUCTSTAR_T,type identifier string, string literal
+//void setStructName(struct type_t* entry, uint64_t* name)              { entry -> structName = name; }
+//0,adress malloc
+//void setDimensions(struct type_t* entry, struct dimension_t* dim)     { entry -> dimensions = dim; }
+//0,adresss maloc
+//void setFields(struct type_t* entry, struct field_t* fields)          { entry -> fields     = fields; }
+
+// array dimension:
+// +----+---------+
+// |  0 | next    | pointer to next dimension
+// |  1 | length  | length of dimension
+// +----+---------+
+
+//uint64_t getSize(struct dimension_t* entry)                     { return entry -> size;}
+//struct dimension_t* getNextDimension(struct dimension_t* entry) { return entry -> next; }
+
+//void setSize(struct dimension_t* entry, uint64_t size)                      { entry -> size = size; }
+//void setNextDimension(struct dimension_t* entry, struct dimension_t* next)  { entry -> next = next; }
+
+
+
+//struct field_t* getNextField(struct field_t* entry)  { return entry -> next;}
+//uint64_t* getFieldName(struct field_t* entry)        { return entry -> name; }
+//struct type_t* getFieldType(struct field_t* entry)   { return entry -> type; }
+//uint64_t  getFieldOffset(struct field_t* entry)      { return entry -> offset; }
+
+//void setNextField(struct field_t* entry, struct field_t* next) { entry -> next   = next;}
+//identifier
+//void setFieldName(struct field_t* entry, uint64_t* name)       { entry -> name   = name; }
+//adress malloc
+//void setFieldType(struct field_t* entry, struct type_t* type)  { entry -> type   = type; }
+//void setFieldOffset(struct field_t* entry, uint64_t offset)    { entry -> offset = offset; }
+
 void resetSymbolTables();
 
-uint64_t* createSymbolTableEntry(uint64_t which, uint64_t* string, uint64_t line, uint64_t class, uint64_t type, uint64_t value, uint64_t address);
+//hw4 changed returntype from void to int*
+struct symbol_table_t* createSymbolTableEntry(uint64_t which, uint64_t* string, uint64_t line, uint64_t class, uint64_t type, uint64_t value,uint64_t address);
 
-uint64_t* searchSymbolTable(uint64_t* entry, uint64_t* string, uint64_t class);
-uint64_t* getScopedSymbolTableEntry(uint64_t* string, uint64_t class);
+struct symbol_table_t* searchSymbolTable(struct symbol_table_t* entry, uint64_t* string, uint64_t class);
+struct symbol_table_t* getScopedSymbolTableEntry(uint64_t* string, uint64_t class);
 
-uint64_t isUndefinedProcedure(uint64_t* entry);
+uint64_t isUndefinedProcedure(struct symbol_table_t* entry);
 uint64_t reportUndefinedProcedures();
+struct field_t* getStructField(struct symbol_table_t* entry,uint64_t* fieldName);
 
-// symbol table entry:
-// +----+-----------+
-// |  0 | next      | pointer to next entry
-// |  1 | string    | identifier string, string literal
-// |  2 | line#     | source line number
-// |  3 | class     | VARIABLE, BIGINT, STRING, PROCEDURE, ARRAY
-// |  4 | type      | UINT64_T, UINT64STAR_T, VOID_T
-// |  5 | value     | VARIABLE: initial value
-// |  6 | address   | VARIABLE, BIGINT, STRING: offset, PROCEDURE: address
-// |  7 | scope     | REG_GP, REG_FP
-// |  8 | dimension | ARRAY: number of dimensions
-// |  9 | sizes     | ARRAY: list of dimension sizes
-// | 10 | totalsize | ARRAY: total number of elements
-// +----+-----------+
+uint64_t getVariableType(struct symbol_table_t* entry){
+  struct type_t* type;
+  type = entry -> typeStruct;
+  return type -> type;
+}
 
 
-uint64_t* getNextEntry(uint64_t* entry)       { return (uint64_t*) *entry; }
-uint64_t* getString(uint64_t* entry)          { return (uint64_t*) *(entry + 1); }
-uint64_t  getLineNumber(uint64_t* entry)      { return             *(entry + 2); }
-uint64_t  getClass(uint64_t* entry)           { return             *(entry + 3); }
-uint64_t  getType(uint64_t* entry)            { return             *(entry + 4); }
-uint64_t  getValue(uint64_t* entry)           { return             *(entry + 5); }
-uint64_t  getAddress(uint64_t* entry)         { return             *(entry + 6); }
-uint64_t  getScope(uint64_t* entry)           { return             *(entry + 7); }
-// hw3 start
-uint64_t  getArrayDimension(uint64_t* entry)  { return             *(entry + 8); }
-uint64_t* getArraySize(uint64_t* entry)       { return (uint64_t*) *(entry + 9); }
-uint64_t  getTotalSizeOfArray(uint64_t* entry){ return             *(entry + 10);}
 
-//?get the multiplier for address calculation of dimension dimNumb....dimNumb starts with 1
-uint64_t getArrayDimensionMultiplier(uint64_t* entry, uint64_t dimNumb){
+//get the multiplier for address calculation of dimension dimNumb....dimNumb starts with 1
+uint64_t getDimMultiplier(struct symbol_table_t* entry, uint64_t dimNumb){
+  struct type_t* type;
+  struct dimension_t* dim;
   uint64_t mult;
   uint64_t i;
   uint64_t* ptr;
   mult = 1;
-  //adress
-  ptr = getArraySize(entry);
+
+  type = entry -> typeStruct;
+  dim = type -> dimensions;
 
   i = 0;
-  while(i < (getArrayDimension(entry) - dimNumb)){
-    if((uint64_t) ptr == 0) return 0; //dimension doesn't exist
-    //1*totalsize
-    mult = mult * *(ptr + 1);
-    ptr = getNextEntry(ptr);
+  while(i < (entry -> numberOfDimensions - dimNumb)){
+    if((uint64_t)dim == 0) return 0; //dimension doesn't exist
+    //literal
+    mult = mult * dim -> size;
+    dim = dim -> next;
     i = i + 1;
   }
 
   return mult;
 }
-// hw3 end
 
-void setNextEntry(uint64_t* entry, uint64_t* next)        { *entry       = (uint64_t) next; }
-void setString(uint64_t* entry, uint64_t* identifier)     { *(entry + 1) = (uint64_t) identifier; }
-void setLineNumber(uint64_t* entry, uint64_t line)        { *(entry + 2) = line; }
-void setClass(uint64_t* entry, uint64_t class)            { *(entry + 3) = class; }
-void setType(uint64_t* entry, uint64_t type)              { *(entry + 4) = type; }
-void setValue(uint64_t* entry, uint64_t value)            { *(entry + 5) = value; }
-void setAddress(uint64_t* entry, uint64_t address)        { *(entry + 6) = address; }
-void setScope(uint64_t* entry, uint64_t scope)            { *(entry + 7) = scope; }
-// hw3 start
-void setArraySize(uint64_t* entry, uint64_t* sizes)       { *(entry + 9)  = (uint64_t) sizes;}
-void setArrayDimension(uint64_t* entry, uint64_t dim)     { *(entry + 8)  = dim; }
-void setTotalSizeOfArray(uint64_t* entry, uint64_t size)  { *(entry + 10) = size; }
-//adds a new array dimension to a symbol table entry
-void addArrayDimension(uint64_t* entry,uint64_t size){
-  uint64_t* new;
-
-  setArrayDimension(entry, getArrayDimension(entry) + 1);
-  setTotalSizeOfArray(entry, getTotalSizeOfArray(entry) * size);
-
-  new = malloc(SIZEOFUINT64 + SIZEOFUINT64STAR);
-  *new = (uint64_t) getArraySize(entry);
-  *(new + 1) = size;
-
-  setArraySize(entry, new);
+//sets the type of a variable, array or procedure
+void  setVariableType(struct symbol_table_t* entry,uint64_t type){
+  entry -> typeStruct -> type = type;
 }
-// hw3 end
 
+//adds a new array dimension to a symbol table entry
+void addDimension(struct symbol_table_t* entry,uint64_t size){
+  //uint64_t* new;
+  struct type_t* type;
+  struct dimension_t* new;
+  //in symbol
+  entry -> numberOfDimensions = entry -> numberOfDimensions + 1;
+  entry -> totalSize = entry -> totalSize * size;
+
+  type = entry -> typeStruct;
+
+  new = (struct dimension_t*)malloc(SIZEOFUINT64 + SIZEOFUINT64STAR);
+  //new
+  new -> next = type -> dimensions;
+  //liter
+  new -> size = size;
+
+  type -> dimensions = new;
+}
+
+//linked list for struct elements containing
+
+void addStructElement(struct symbol_table_t* entry, uint64_t* name, uint64_t* type,uint64_t* structName, struct symbol_table_t* def, uint64_t offset){
+  struct type_t* typeStruct;
+  struct type_t* newType;
+  struct field_t* oldField;
+  struct field_t* newField;
+
+  entry -> totalSize = entry -> totalSize + 1;
+
+  typeStruct = entry -> typeStruct;
+  oldField = typeStruct -> fields;
+  //New field
+  newField = (struct field_t*) malloc(SIZEOFUINT64 + 3*SIZEOFUINT64STAR);
+
+  newField -> next = oldField; // new field pointed to old field
+  //ident_name
+  newField -> name = name;
+  //type_t
+  newType = (struct type_t*) malloc(4 * SIZEOFUINT64STAR + SIZEOFUINT64);
+  //adress
+  newField -> type     = newType;
+  newField -> offset   = offset;
+  typeStruct -> fields = newField;
+  //struct entry or 0
+  newType-> definition = def;
+  newType -> structName = structName;
+  //structstar or uint
+  newType -> type = type;
+}
+//hw4 end
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
-
+uint64_t UINT64_T      = 1;
+uint64_t UINT64STAR_T  = 2;
+uint64_t VOID_T        = 3;
+uint64_t  STRUCTSTAR_T = 4; //hw4
 // classes
 uint64_t VARIABLE  = 1;
 uint64_t BIGINT    = 2;
 uint64_t STRING    = 3;
 uint64_t PROCEDURE = 4;
-uint64_t ARRAY     = 5; // hw3
+uint64_t ARRAY     = 5; //hw3
+uint64_t STRUCT    = 6; //hw4
 
-// types
-uint64_t UINT64_T     = 1;
-uint64_t UINT64STAR_T = 2;
-uint64_t VOID_T       = 3;
+
+
 
 // symbol tables
 uint64_t GLOBAL_TABLE  = 1;
@@ -551,26 +700,26 @@ uint64_t LIBRARY_TABLE = 3;
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 // table pointers
-uint64_t* global_symbol_table  = (uint64_t*) 0;
-uint64_t* local_symbol_table   = (uint64_t*) 0;
-uint64_t* library_symbol_table = (uint64_t*) 0;
+struct symbol_table_t* global_symbol_table  ;
+struct symbol_table_t* local_symbol_table  ;
+struct symbol_table_t* library_symbol_table ;
 
 uint64_t numberOfGlobalVariables = 0;
 uint64_t numberOfProcedures      = 0;
 uint64_t numberOfStrings         = 0;
-uint64_t numberOfArrays          = 0; // hw3
+uint64_t numberOfArrays          = 0; //hw3
 
 // ------------------------- INITIALIZATION ------------------------
 
 void resetSymbolTables() {
-  global_symbol_table  = (uint64_t*) 0;
-  local_symbol_table   = (uint64_t*) 0;
-  library_symbol_table = (uint64_t*) 0;
+  global_symbol_table  = (struct symbol_table_t*) 0;
+  local_symbol_table   = (struct symbol_table_t*) 0;
+  library_symbol_table = (struct symbol_table_t*) 0;
 
   numberOfGlobalVariables = 0;
   numberOfProcedures      = 0;
   numberOfStrings         = 0;
-  numberOfArrays          = 0; // hw3
+  numberOfArrays          = 0; //hw3
 }
 
 // -----------------------------------------------------------------
@@ -582,13 +731,14 @@ void resetParser();
 uint64_t isNotRbraceOrEOF();
 uint64_t isExpression();
 uint64_t isLiteral();
-uint64_t isBitwiseShift(); // hw2
+uint64_t isShift(); //hw2
 uint64_t isStarOrDivOrModulo();
 uint64_t isPlusOrMinus();
 uint64_t isComparison();
 
 uint64_t lookForFactor();
 uint64_t lookForStatement();
+uint64_t lookForHilf();
 uint64_t lookForType();
 
 void save_temporaries();
@@ -599,12 +749,12 @@ void syntaxErrorUnexpected();
 void printType(uint64_t type);
 void typeWarning(uint64_t expected, uint64_t found);
 
-uint64_t* getVariableOrBigInt(uint64_t* variable, uint64_t class);
+struct symbol_table_t* getVariableOrBigInt(uint64_t* variable, uint64_t class);
 uint64_t  load_variableOrBigInt(uint64_t* variable, uint64_t class);
 void      load_integer(uint64_t value);
 void      load_string(uint64_t* string);
 
-uint64_t help_call_codegen(uint64_t* entry, uint64_t* procedure);
+uint64_t help_call_codegen(struct symbol_table_t* entry, uint64_t* procedure);
 void     help_procedure_prologue(uint64_t localVariables);
 void     help_procedure_epilogue(uint64_t parameters);
 
@@ -612,9 +762,8 @@ uint64_t compile_call(uint64_t* procedure);
 uint64_t compile_factor();
 uint64_t compile_term();
 uint64_t compile_simpleExpression();
-uint64_t compile_bitwiseShift(); // hw2
-uint64_t compile_selector_declaration(uint64_t numberOfSelectors, uint64_t* entry); // hw3
-uint64_t compile_selector_access(uint64_t numberOfSelectors, uint64_t* entry);      // hw3
+uint64_t compile_bitwiseShift(); //hw2
+uint64_t compile_selector(uint64_t selectorNum,struct symbol_table_t* entry);//hw3
 uint64_t compile_expression();
 void     compile_while();
 void     compile_if();
@@ -625,6 +774,8 @@ void     compile_variable(uint64_t offset);
 uint64_t compile_initialization(uint64_t type);
 void     compile_procedure(uint64_t* procedure, uint64_t type);
 void     compile_cstar();
+uint64_t compile_structAccess(uint64_t* variableName);
+
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -641,7 +792,8 @@ uint64_t numberOfAssignments = 0;
 uint64_t numberOfWhile       = 0;
 uint64_t numberOfIf          = 0;
 uint64_t numberOfReturn      = 0;
-uint64_t arrayDeklaration    = 0; // hw3
+uint64_t arrayDeklaration    = 0;//hw3
+uint64_t* structTypeName     = (uint64_t*) 0;//hw4
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -651,6 +803,7 @@ void resetParser() {
   numberOfWhile       = 0;
   numberOfIf          = 0;
   numberOfReturn      = 0;
+  structTypeName      = (uint64_t*) 0;
 
   getSymbol();
 }
@@ -721,8 +874,8 @@ uint64_t REG_T4  = 29;
 uint64_t REG_T5  = 30;
 uint64_t REG_T6  = 31;
 
-uint64_t ABBR   = 0; // hw3
-uint64_t NAME   = 1; // hw3
+uint64_t ABBR    = 0;//hw3
+uint64_t NAME    = 1;//hw3
 
 //uint64_t* REGISTERS; // strings representing registers
 uint64_t REGISTERS[2][32];
@@ -730,76 +883,76 @@ uint64_t REGISTERS[2][32];
 // ------------------------- INITIALIZATION ------------------------
 
 void initRegister() {
-  // hw3 REGISTERS = smalloc(NUMBEROFREGISTERS * SIZEOFUINT64STAR);
-  // hw3 start
-  REGISTERS[ABBR][REG_ZR]   = (uint64_t) "$zero";
-  REGISTERS[ABBR][REG_RA]   = (uint64_t) "$ra";
-  REGISTERS[ABBR][REG_SP]   = (uint64_t) "$sp";
-  REGISTERS[ABBR][REG_GP]   = (uint64_t) "$gp";
-  REGISTERS[ABBR][REG_TP]   = (uint64_t) "$tp";
-  REGISTERS[ABBR][REG_T0]   = (uint64_t) "$t0";
-  REGISTERS[ABBR][REG_T1]   = (uint64_t) "$t1";
-  REGISTERS[ABBR][REG_T2]   = (uint64_t) "$t2";
-  REGISTERS[ABBR][REG_FP]   = (uint64_t) "$fp";
-  REGISTERS[ABBR][REG_S1]   = (uint64_t) "$s1";
-  REGISTERS[ABBR][REG_A0]   = (uint64_t) "$a0";
-  REGISTERS[ABBR][REG_A1]   = (uint64_t) "$a1";
-  REGISTERS[ABBR][REG_A2]   = (uint64_t) "$a2";
-  REGISTERS[ABBR][REG_A3]   = (uint64_t) "$a3";
-  REGISTERS[ABBR][REG_A4]   = (uint64_t) "$a4";
-  REGISTERS[ABBR][REG_A5]   = (uint64_t) "$a5";
-  REGISTERS[ABBR][REG_A6]   = (uint64_t) "$a6";
-  REGISTERS[ABBR][REG_A7]   = (uint64_t) "$a7";
-  REGISTERS[ABBR][REG_S2]   = (uint64_t) "$s2";
-  REGISTERS[ABBR][REG_S3]   = (uint64_t) "$s3";
-  REGISTERS[ABBR][REG_S4]   = (uint64_t) "$s4";
-  REGISTERS[ABBR][REG_S5]   = (uint64_t) "$s5";
-  REGISTERS[ABBR][REG_S6]   = (uint64_t) "$s6";
-  REGISTERS[ABBR][REG_S7]   = (uint64_t) "$s7";
-  REGISTERS[ABBR][REG_S8]   = (uint64_t) "$s8";
-  REGISTERS[ABBR][REG_S9]   = (uint64_t) "$s9";
-  REGISTERS[ABBR][REG_S10]  = (uint64_t) "$s10";
-  REGISTERS[ABBR][REG_S11]  = (uint64_t) "$s11";
-  REGISTERS[ABBR][REG_T3]   = (uint64_t) "$t3";
-  REGISTERS[ABBR][REG_T4]   = (uint64_t) "$t4";
-  REGISTERS[ABBR][REG_T5]   = (uint64_t) "$t5";
-  REGISTERS[ABBR][REG_T6]   = (uint64_t) "$t6";
+  //REGISTERS = smalloc(NUMBEROFREGISTERS * SIZEOFUINT64STAR);
 
-  // long register names as found on
-  // https://github.com/riscv/riscv-elf-psabi-doc/blob/master/riscv-elf.md
-  REGISTERS[NAME][REG_ZR] = (uint64_t) "constant 0";
-  REGISTERS[NAME][REG_RA] = (uint64_t) "return address";
-  REGISTERS[NAME][REG_SP] = (uint64_t) "stack pointer";
-  REGISTERS[NAME][REG_GP] = (uint64_t) "global pointer";
-  REGISTERS[ABBR][REG_TP] = (uint64_t) "thread pointer";
-  REGISTERS[NAME][REG_T0] = (uint64_t) "unsaved temporary 0";
-  REGISTERS[NAME][REG_T1] = (uint64_t) "unsaved temporary 1";
-  REGISTERS[NAME][REG_T2] = (uint64_t) "unsaved temporary 2";
-  REGISTERS[NAME][REG_FP] = (uint64_t) "frame pointer";
-  REGISTERS[NAME][REG_S1] = (uint64_t) "saved temporary 1";
-  REGISTERS[NAME][REG_A0] = (uint64_t) "function argument 0";
-  REGISTERS[NAME][REG_A1] = (uint64_t) "function argument 1";
-  REGISTERS[NAME][REG_A2] = (uint64_t) "function argument 2";
-  REGISTERS[NAME][REG_A3] = (uint64_t) "function argument 3";
-  REGISTERS[NAME][REG_A4] = (uint64_t) "function argument 4";
-  REGISTERS[NAME][REG_A5] = (uint64_t) "function argument 5";
-  REGISTERS[NAME][REG_A6] = (uint64_t) "function argument 6";
-  REGISTERS[NAME][REG_A7] = (uint64_t) "function argument 7";
-  REGISTERS[NAME][REG_S2] = (uint64_t) "saved temporary 2";
-  REGISTERS[NAME][REG_S3] = (uint64_t) "saved temporary 3";
-  REGISTERS[NAME][REG_S4] = (uint64_t) "saved temporary 4";
-  REGISTERS[NAME][REG_S5] = (uint64_t) "saved temporary 5";
-  REGISTERS[NAME][REG_S6] = (uint64_t) "saved temporary 6";
-  REGISTERS[NAME][REG_S7] = (uint64_t) "saved temporary 7";
-  REGISTERS[NAME][REG_S8] = (uint64_t) "saved temporary 8";
-  REGISTERS[NAME][REG_S9] = (uint64_t) "saved temporary 9";
-  REGISTERS[NAME][REG_S10]= (uint64_t) "saved temporary 10";
-  REGISTERS[NAME][REG_S11]= (uint64_t) "saved temporary 11";
-  REGISTERS[NAME][REG_T3] = (uint64_t) "unsaved temporary 3";
-  REGISTERS[NAME][REG_T4] = (uint64_t) "unsaved temporary 4";
-  REGISTERS[NAME][REG_T5] = (uint64_t) "unsaved temporary 5";
-  REGISTERS[NAME][REG_T6] = (uint64_t) "unsaved temporary 6";
-  // hw3 end
+REGISTERS[ABBR][REG_ZR]   = (uint64_t) "$zero";
+REGISTERS[ABBR][REG_RA]   = (uint64_t) "$ra";
+REGISTERS[ABBR][REG_SP]   = (uint64_t) "$sp";
+REGISTERS[ABBR][REG_GP]   = (uint64_t) "$gp";
+REGISTERS[ABBR][REG_TP]   = (uint64_t) "$tp";
+REGISTERS[ABBR][REG_T0]   = (uint64_t) "$t0";
+REGISTERS[ABBR][REG_T1]   = (uint64_t) "$t1";
+REGISTERS[ABBR][REG_T2]   = (uint64_t) "$t2";
+REGISTERS[ABBR][REG_FP]   = (uint64_t) "$fp";
+REGISTERS[ABBR][REG_S1]   = (uint64_t) "$s1";
+REGISTERS[ABBR][REG_A0]   = (uint64_t) "$a0";
+REGISTERS[ABBR][REG_A1]   = (uint64_t) "$a1";
+REGISTERS[ABBR][REG_A2]   = (uint64_t) "$a2";
+REGISTERS[ABBR][REG_A3]   = (uint64_t) "$a3";
+REGISTERS[ABBR][REG_A4]   = (uint64_t) "$a4";
+REGISTERS[ABBR][REG_A5]   = (uint64_t) "$a5";
+REGISTERS[ABBR][REG_A6]   = (uint64_t) "$a6";
+REGISTERS[ABBR][REG_A7]   = (uint64_t) "$a7";
+REGISTERS[ABBR][REG_S2]   = (uint64_t) "$s2";
+REGISTERS[ABBR][REG_S3]   = (uint64_t) "$s3";
+REGISTERS[ABBR][REG_S4]   = (uint64_t) "$s4";
+REGISTERS[ABBR][REG_S5]   = (uint64_t) "$s5";
+REGISTERS[ABBR][REG_S6]   = (uint64_t) "$s6";
+REGISTERS[ABBR][REG_S7]   = (uint64_t) "$s7";
+REGISTERS[ABBR][REG_S8]   = (uint64_t) "$s8";
+REGISTERS[ABBR][REG_S9]   = (uint64_t) "$s9";
+REGISTERS[ABBR][REG_S10]  = (uint64_t) "$s10";
+REGISTERS[ABBR][REG_S11]  = (uint64_t) "$s11";
+REGISTERS[ABBR][REG_T3]   = (uint64_t) "$t3";
+REGISTERS[ABBR][REG_T4]   = (uint64_t) "$t4";
+REGISTERS[ABBR][REG_T5]   = (uint64_t) "$t5";
+REGISTERS[ABBR][REG_T6]   = (uint64_t) "$t6";
+// long register names as found on
+// https://github.com/riscv/riscv-elf-psabi-doc/blob/master/riscv-elf.md
+// REGISTERS[NAME][REG_ZR] = (uint64_t) "constant 0";
+// REGISTERS[NAME][REG_RA] = (uint64_t) "return address";
+// REGISTERS[NAME][REG_SP] = (uint64_t) "stack pointer";
+// REGISTERS[NAME][REG_GP] = (uint64_t) "global pointer";
+// REGISTERS[NAME][REG_TP] = (uint64_t) "thread pointer";
+// REGISTERS[NAME][REG_T0] = (uint64_t) "unsaved temporary 0";
+// REGISTERS[NAME][REG_T1] = (uint64_t) "unsaved temporary 1";
+// REGISTERS[NAME][REG_T2] = (uint64_t) "unsaved temporary 2";
+// REGISTERS[NAME][REG_FP] = (uint64_t) "frame pointer";
+// REGISTERS[NAME][REG_S1] = (uint64_t) "saved temporary 1";
+// REGISTERS[NAME][REG_A0] = (uint64_t) "function argument 0";
+// REGISTERS[NAME][REG_A1] = (uint64_t) "function argument 1";
+// REGISTERS[NAME][REG_A2] = (uint64_t) "function argument 2";
+// REGISTERS[NAME][REG_A3] = (uint64_t) "function argument 3";
+// REGISTERS[NAME][REG_A4] = (uint64_t) "function argument 4";
+// REGISTERS[NAME][REG_A5] = (uint64_t) "function argument 5";
+// REGISTERS[NAME][REG_A6] = (uint64_t) "function argument 6";
+// REGISTERS[NAME][REG_A7] = (uint64_t) "function argument 7";
+// REGISTERS[NAME][REG_S2] = (uint64_t) "saved temporary 2";
+// REGISTERS[NAME][REG_S3] = (uint64_t) "saved temporary 3";
+// REGISTERS[NAME][REG_S4] = (uint64_t) "saved temporary 4";
+// REGISTERS[NAME][REG_S5] = (uint64_t) "saved temporary 5";
+// REGISTERS[NAME][REG_S6] = (uint64_t) "saved temporary 6";
+// REGISTERS[NAME][REG_S7] = (uint64_t) "saved temporary 7";
+// REGISTERS[NAME][REG_S8] = (uint64_t) "saved temporary 8";
+// REGISTERS[NAME][REG_S9] = (uint64_t) "saved temporary 9";
+// REGISTERS[NAME][REG_S10]= (uint64_t) "saved temporary 10";
+// REGISTERS[NAME][REG_S11]= (uint64_t) "saved temporary 11";
+// REGISTERS[NAME][REG_T3] = (uint64_t) "unsaved temporary 3";
+// REGISTERS[NAME][REG_T4] = (uint64_t) "unsaved temporary 4";
+// REGISTERS[NAME][REG_T5] = (uint64_t) "unsaved temporary 5";
+// REGISTERS[NAME][REG_T6] = (uint64_t) "unsaved temporary 6";
+// hw3 end
+
 }
 
 // -----------------------------------------------------------------
@@ -843,7 +996,8 @@ void     decodeUFormat();
 uint64_t OP_LD     = 3;   // 0000011, I format (LD)
 uint64_t OP_IMM    = 19;  // 0010011, I format (ADDI, NOP)
 uint64_t OP_SD     = 35;  // 0100011, S format (SD)
-uint64_t OP_OP     = 51;  // 0110011, R format (ADD, SUB, MUL, DIVU, REMU, SLTU,SRL,SLL) // hw1
+//HW1
+uint64_t OP_OP     = 51;  // 0110011, R format (ADD, SUB, MUL, DIVU, REMU, SLTU,SRL,SLL)
 uint64_t OP_LUI    = 55;  // 0110111, U format (LUI)
 uint64_t OP_BRANCH = 99;  // 1100011, B format (BEQ)
 uint64_t OP_JALR   = 103; // 1100111, I format (JALR)
@@ -1134,6 +1288,7 @@ void print_add_sub_mul_divu_remu_sltu_srl_sll_before();
 void do_add();
 void do_sub();
 void do_mul();
+
 void do_sll(); // hw1
 void do_srl(); // hw1
 
@@ -2391,6 +2546,11 @@ uint64_t identifierOrKeyword() {
     return SYM_RETURN;
   if (identifierStringMatch(SYM_VOID))
     return SYM_VOID;
+    //hw4 start
+      if (identifierStringMatch(SYM_STRUCT))
+        return SYM_STRUCT;
+
+
   else
     return SYM_IDENTIFIER;
 }
@@ -2539,6 +2699,13 @@ void getSymbol() {
       } else if (character == CHAR_DASH) {
         getCharacter();
 
+        if(character == CHAR_GT){ // hw4
+          symbol = SYM_ARROW;
+
+          getCharacter();
+        }else
+
+
         symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
@@ -2575,7 +2742,7 @@ void getSymbol() {
         getCharacter();
 
         symbol = SYM_RBRACE;
-        // hw3 start
+        //hw3 start
       } else if (character == CHAR_LBRACKET){
           getCharacter();
 
@@ -2586,13 +2753,14 @@ void getSymbol() {
 
           symbol = SYM_RBRACKET;
 
-          // hw3 end
+          //hw3 end
 
 
       } else if (character == CHAR_COMMA) {
         getCharacter();
 
         symbol = SYM_COMMA;
+
       } else if (character == CHAR_LT) {
         getCharacter();
 
@@ -2655,26 +2823,43 @@ void getSymbol() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
-uint64_t* createSymbolTableEntry(uint64_t whichTable, uint64_t* string, uint64_t line, uint64_t class, uint64_t type, uint64_t value, uint64_t address) {
-  uint64_t* newEntry;
 
-  newEntry = smalloc(3* SIZEOFUINT64STAR + 8 * SIZEOFUINT64);
+struct symbol_table_t* createSymbolTableEntry(uint64_t whichTable, uint64_t* string, uint64_t line, uint64_t class, uint64_t type,uint64_t value,uint64_t address) {
+  struct symbol_table_t* newEntry;
+  //hw4
+  struct type_t* typeStruct;
+  //hw3
+  newEntry = (struct symbol_table_t*) malloc(3 * SIZEOFUINT64STAR + 7 * SIZEOFUINT64);
+  //hw4 start
+  typeStruct = (struct type_t*) malloc(4 * SIZEOFUINT64STAR + SIZEOFUINT64);
 
-  setString(newEntry, string);
-  setLineNumber(newEntry, line);
-  setClass(newEntry, class);
-  setType(newEntry, type);
-  setValue(newEntry, value);
-  setAddress(newEntry, address);
+  typeStruct -> type = type;
+  typeStruct -> definition = (struct symbol_table_t*) 0;
+  typeStruct -> structName = (uint64_t*) 0;
+  typeStruct -> dimensions = (struct dimension_t*) 0;
+  typeStruct -> fields     = (struct field_t*) 0;
+  //hw4 end
 
-  setTotalSizeOfArray(newEntry, 1);     // hw3
-  setArrayDimension(newEntry, 0);       // hw3
-  setArraySize(newEntry, (uint64_t*) 0);// hw3
+  newEntry -> string = string;
+  newEntry -> line = line;
+  newEntry -> class = class;
+  //hw4
+  newEntry -> typeStruct = typeStruct;
+  newEntry -> value = value;
+  newEntry -> address = address;
+  //hw4 start
+  if(class == STRUCT){
+    newEntry -> totalSize = 0;
+  }else if(class == ARRAY){
+    newEntry -> totalSize = 1;
+  }
+  //hw4 end
+  newEntry -> numberOfDimensions = 0;
 
   // create entry at head of symbol table
   if (whichTable == GLOBAL_TABLE) {
-    setScope(newEntry, REG_GP);
-    setNextEntry(newEntry, global_symbol_table);
+    newEntry -> scope = REG_GP;
+    newEntry -> next = global_symbol_table;
     global_symbol_table = newEntry;
 
     if (class == VARIABLE)
@@ -2683,38 +2868,73 @@ uint64_t* createSymbolTableEntry(uint64_t whichTable, uint64_t* string, uint64_t
       numberOfProcedures = numberOfProcedures + 1;
     else if (class == STRING)
       numberOfStrings = numberOfStrings + 1;
-      // hw3 start
-      else if(class == ARRAY)
-        numberOfArrays = numberOfArrays +1;
-      // hw3 end
+    else if(class == ARRAY) // hw3
+      numberOfArrays = numberOfArrays +1;// hw3
   } else if (whichTable == LOCAL_TABLE) {
-    setScope(newEntry, REG_FP);
-    setNextEntry(newEntry, local_symbol_table);
+    newEntry -> scope = REG_FP;
+    newEntry -> next = local_symbol_table;
     local_symbol_table = newEntry;
   } else {
     // library procedures
-    setScope(newEntry, REG_GP);
-    setNextEntry(newEntry, library_symbol_table);
+    newEntry -> scope = REG_GP;
+    newEntry -> next = library_symbol_table;
     library_symbol_table = newEntry;
   }
-  return newEntry; // hw3
+  return newEntry;//hw3
 }
 
-uint64_t* searchSymbolTable(uint64_t* entry, uint64_t* string, uint64_t class) {
-  while (entry != (uint64_t*) 0) {
-    if (stringCompare(string, getString(entry)))
-      if (class == getClass(entry))
+
+
+struct symbol_table_t* searchSymbolTable(struct symbol_table_t* entry, uint64_t* string, uint64_t class) {
+  while (entry != (struct symbol_table_t*) 0) {
+    if (stringCompare(string, entry -> string))
+      if (class == entry -> class)
         return entry;
 
     // keep looking
-    entry = getNextEntry(entry);
+    entry = entry -> next;
   }
 
-  return (uint64_t*) 0;
+  return (struct symbol_table_t*) 0;
 }
+//hw4 start
+//searches in the given structEntry for the field with name fieldName
+struct field_t* getStructField(struct symbol_table_t* structEntry,uint64_t* fieldName){
+  uint64_t* name;
+  uint64_t* structName;
+  struct type_t* type;
+  struct field_t* field;
 
-uint64_t* getScopedSymbolTableEntry(uint64_t* string, uint64_t class) {
-  uint64_t* entry;
+  structName = structEntry -> string;
+
+  type = structEntry -> typeStruct;
+  field = type -> fields;
+
+  //search through field list and compare identifiers
+  while(field != (struct field_t*) 0){
+    name = field -> name;
+    if(stringCompare(name, fieldName))
+      return field;
+    field = field -> next;
+  }
+  //field not found
+
+  if(field == (struct field_t*) 0){
+    printLineNumber((uint64_t*) "error", lineNumber);
+    print((uint64_t*) "no field ");
+    print(fieldName);
+    print((uint64_t*) " defined for struct ");
+    print(structName);
+    println();
+    exit(EXITCODE_PARSERERROR);
+  }
+
+  return field;
+}
+//hw4 end
+
+struct symbol_table_t* getScopedSymbolTableEntry(uint64_t* string, uint64_t class) {
+  struct symbol_table_t* entry;
 
   if (class == VARIABLE)
     // local variables override global variables
@@ -2723,28 +2943,28 @@ uint64_t* getScopedSymbolTableEntry(uint64_t* string, uint64_t class) {
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
   else
-    entry = (uint64_t*) 0;
+    entry = (struct symbol_table_t*) 0;
 
-  if (entry == (uint64_t*) 0)
+  if (entry == (struct symbol_table_t*) 0)
     return searchSymbolTable(global_symbol_table, string, class);
   else
     return entry;
 }
 
-uint64_t isUndefinedProcedure(uint64_t* entry) {
-  uint64_t* libraryEntry;
+uint64_t isUndefinedProcedure(struct symbol_table_t* entry) {
+  struct symbol_table_t* libraryEntry;
 
-  if (getClass(entry) == PROCEDURE) {
+  if (entry -> class == PROCEDURE) {
     // library procedures override declared or defined procedures
-    libraryEntry = searchSymbolTable(library_symbol_table, getString(entry), PROCEDURE);
+    libraryEntry = searchSymbolTable(library_symbol_table, entry -> string, PROCEDURE);
 
-    if (libraryEntry != (uint64_t*) 0)
+    if (libraryEntry != (struct symbol_table_t*) 0)
       // procedure is library procedure
       return 0;
-    else if (getAddress(entry) == 0)
+    else if (entry -> address == 0)
       // procedure declared but not defined
       return 1;
-    else if (getOpcode(loadInstruction(getAddress(entry))) == OP_JAL)
+    else if (getOpcode(loadInstruction(entry -> address)) == OP_JAL)
       // procedure called but not defined
       return 1;
   }
@@ -2754,25 +2974,25 @@ uint64_t isUndefinedProcedure(uint64_t* entry) {
 
 uint64_t reportUndefinedProcedures() {
   uint64_t undefined;
-  uint64_t* entry;
+  struct symbol_table_t* entry;
 
   undefined = 0;
 
   entry = global_symbol_table;
 
-  while (entry != (uint64_t*) 0) {
+  while (entry != (struct symbol_table_t*) 0) {
     if (isUndefinedProcedure(entry)) {
       undefined = 1;
 
-      printLineNumber((uint64_t*) "syntax error", getLineNumber(entry));
+      printLineNumber((uint64_t*) "syntax error", entry -> line);
       print((uint64_t*) "procedure ");
-      print(getString(entry));
+      print(entry -> string);
       print((uint64_t*) " undefined");
       println();
     }
 
     // keep looking
-    entry = getNextEntry(entry);
+    entry = entry -> next;
   }
 
   return undefined;
@@ -2809,16 +3029,14 @@ uint64_t isExpression() {
   else
     return 0;
 }
-// hw2 start
-uint64_t isBitwiseShift(){
+// hw2
+uint64_t isShift(){
 	if(symbol == SYM_BITWISELEFTSHIFT)
     return 1;
 	else if(symbol == SYM_BITWISERIGHTSHIFT)
     return 1;
-	else
-    return 0;
+	else return 0;
 }
-// hw2 end
 
 uint64_t isLiteral() {
   if (symbol == SYM_INTEGER)
@@ -2901,6 +3119,15 @@ uint64_t lookForStatement() {
   else
     return 1;
 }
+uint64_t lookForHilf() {
+  if (symbol == SYM_UINT64)
+    return 1;
+  else if (symbol == SYM_STRUCT)
+    return 1;
+
+  else
+    return 0;
+}
 
 uint64_t lookForType() {
   if (symbol == SYM_UINT64)
@@ -2909,6 +3136,10 @@ uint64_t lookForType() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+    //hw4 start
+    else if (symbol == SYM_STRUCT)
+      return 0;
+    //hw4 end
   else
     return 1;
 }
@@ -3043,49 +3274,46 @@ void typeWarning(uint64_t expected, uint64_t found) {
 
   println();
 }
-
-// hw3 start
-uint64_t* getSymbolTableEntry(uint64_t* string,uint64_t class) {
-  uint64_t* entry;
+struct symbol_table_t* getSymbolTableEntry(uint64_t* string,uint64_t class) {
+  struct symbol_table_t* entry;
 
   if (class == ARRAY) {
     // local variables override global variables
     entry = searchSymbolTable(local_symbol_table, string, class);
 
-    if (entry != (uint64_t*) 0)
+    if (entry != (struct symbol_table_t*) 0)
       return entry;
   }
 
   return searchSymbolTable(global_symbol_table, string, class);
 }
 
-uint64_t* getArrayVariable(uint64_t* variable) {
-  uint64_t* entry;
+struct symbol_table_t* getArrayVariable(uint64_t* variable) {
+  struct symbol_table_t* entry;
 
   entry = getSymbolTableEntry(variable, ARRAY);
 
-  if (entry == (uint64_t*) 0) {
+  if (entry == (struct symbol_table_t*) 0) {
     printLineNumber((uint64_t*) "error", lineNumber);
     print(variable);
     print((uint64_t*) " undeclared");
     println();
 
-    exit(-1);
+    exit(EXITCODE_PARSERERROR);
   }
 
   return entry;
 }
-// hw3 end
 
-uint64_t* getVariableOrBigInt(uint64_t* variableOrBigInt, uint64_t class) {
-  uint64_t* entry;
+struct symbol_table_t* getVariableOrBigInt(uint64_t* variableOrBigInt, uint64_t class) {
+  struct symbol_table_t* entry;
 
   if (class == BIGINT)
     return searchSymbolTable(global_symbol_table, variableOrBigInt, class);
   else {
     entry = getScopedSymbolTableEntry(variableOrBigInt, class);
 
-    if (entry == (uint64_t*) 0) {
+    if (entry == (struct symbol_table_t*) 0) {
       printLineNumber((uint64_t*) "syntax error", lineNumber);
       print(variableOrBigInt);
       print((uint64_t*) " undeclared");
@@ -3099,34 +3327,34 @@ uint64_t* getVariableOrBigInt(uint64_t* variableOrBigInt, uint64_t class) {
 }
 
 uint64_t load_variableOrBigInt(uint64_t* variableOrBigInt, uint64_t class) {
-  uint64_t* entry;
+  struct symbol_table_t* entry;
 
   // assert: n = allocatedTemporaries
 
   entry = getVariableOrBigInt(variableOrBigInt, class);
 
-  if (isSignedInteger(getAddress(entry), 12)) {
+  if (isSignedInteger(entry -> address, 12)) {
     talloc();
 
-    emitLD(currentTemporary(), getScope(entry), getAddress(entry));
+    emitLD(currentTemporary(), entry -> scope, entry -> address);
 
-    return getType(entry);
+    return  getVariableType(entry);
   }
 
-  load_integer(getAddress(entry));
+  load_integer(entry -> address);
 
-  emitADD(currentTemporary(), getScope(entry), currentTemporary());
+  emitADD(currentTemporary(), entry -> scope, currentTemporary());
   emitLD(currentTemporary(), currentTemporary(), 0);
 
   // assert: allocatedTemporaries == n + 1
 
-  return getType(entry);
+  return  getVariableType(entry);
 }
 
 void load_integer(uint64_t value) {
   uint64_t lower;
   uint64_t upper;
-  uint64_t* entry;
+  struct symbol_table_t* entry;
 
   // assert: n = allocatedTemporaries
 
@@ -3167,7 +3395,7 @@ void load_integer(uint64_t value) {
     // integers less than -2^31 or greater than or equal to 2^31 are stored in data segment
     entry = searchSymbolTable(global_symbol_table, integer, BIGINT);
 
-    if (entry == (uint64_t*) 0) {
+    if (entry == (struct symbol_table_t*) 0) {
       allocatedMemory = allocatedMemory + REGISTERSIZE;
 
       createSymbolTableEntry(GLOBAL_TABLE, integer, lineNumber, BIGINT, UINT64_T, value, -allocatedMemory);
@@ -3189,7 +3417,7 @@ void load_string(uint64_t* string) {
   allocatedMemory = allocatedMemory + roundUp(length, REGISTERSIZE);
 
   createSymbolTableEntry(GLOBAL_TABLE, string, lineNumber, STRING, UINT64STAR_T, 0, -allocatedMemory);
-  // Allocate memory from global pointer to bottom of memory
+
   load_integer(-allocatedMemory);
 
   emitADD(currentTemporary(), REG_GP, currentTemporary());
@@ -3197,10 +3425,10 @@ void load_string(uint64_t* string) {
   // assert: allocatedTemporaries == n + 1
 }
 
-uint64_t help_call_codegen(uint64_t* entry, uint64_t* procedure) {
+uint64_t help_call_codegen(struct symbol_table_t* entry, uint64_t* procedure) {
   uint64_t type;
 
-  if (entry == (uint64_t*) 0) {
+  if (entry == (struct symbol_table_t*) 0) {
     // procedure never called nor declared nor defined
 
     // default return type is "int"
@@ -3211,22 +3439,22 @@ uint64_t help_call_codegen(uint64_t* entry, uint64_t* procedure) {
     emitJAL(REG_RA, 0);
 
   } else {
-    type = getType(entry);
+    type =  getVariableType(entry);
 
-    if (getAddress(entry) == 0) {
+    if (entry -> address == 0) {
       // procedure declared but never called nor defined
-      setAddress(entry, binaryLength);
+      entry -> address = binaryLength;
 
       emitJAL(REG_RA, 0);
-    } else if (getOpcode(loadInstruction(getAddress(entry))) == OP_JAL) {
+    } else if (getOpcode(loadInstruction(entry -> address)) == OP_JAL) {
       // procedure called and possibly declared but not defined
 
       // create fixup chain using absolute address
-      emitJAL(REG_RA, getAddress(entry));
-      setAddress(entry, binaryLength - INSTRUCTIONSIZE);
+      emitJAL(REG_RA, entry -> address);
+      entry -> address = binaryLength - INSTRUCTIONSIZE;
     } else
       // procedure defined, use relative address
-      emitJAL(REG_RA, getAddress(entry) - binaryLength);
+      emitJAL(REG_RA, entry -> address - binaryLength);
   }
 
   return type;
@@ -3274,7 +3502,7 @@ void help_procedure_epilogue(uint64_t parameters) {
 }
 
 uint64_t compile_call(uint64_t* procedure) {
-  uint64_t* entry;
+  struct symbol_table_t* entry;
   uint64_t numberOfTemporaries;
   uint64_t type;
 
@@ -3340,10 +3568,13 @@ uint64_t compile_call(uint64_t* procedure) {
 
   return type;
 }
-// hw3 start
-uint64_t compile_selector_declaration(uint64_t numberOfSelectors, uint64_t* entry){
+//hw3 start
+uint64_t compile_selector(uint64_t selectorNum,struct symbol_table_t* entry){
   uint64_t size;
+  uint64_t multiplier;
+  uint64_t type;
   size = 0;
+
   //1 or 0
   //[
   //type arrayName [ arraySize ];
@@ -3360,27 +3591,7 @@ uint64_t compile_selector_declaration(uint64_t numberOfSelectors, uint64_t* entr
     size = literal;
 
     getSymbol();
-  }
-  if(symbol != SYM_RBRACKET){
-    syntaxErrorSymbol(SYM_RBRACKET);
-
-    exit(-1);
-  }
-
-  getSymbol();
-
-  return size;
-}
-
-uint64_t compile_selector_access(uint64_t numberOfSelectors, uint64_t* entry){
-  uint64_t size;
-  uint64_t multiplier;
-  uint64_t type;
-  size = 0;
-  //1 or 0
-  //[
-  //type arrayName [ arraySize ];
-
+  } else {
     type = compile_simpleExpression();
 
     //indices must ba integers
@@ -3391,13 +3602,13 @@ uint64_t compile_selector_access(uint64_t numberOfSelectors, uint64_t* entry){
     //calculate address offset for this dimension
     //totalsize
     //?
-    multiplier = getArrayDimensionMultiplier(entry, numberOfSelectors);
+    multiplier = getDimMultiplier(entry, selectorNum);
     //*8*totalsize
     multiplier = multiplier * REGISTERSIZE;
     if(multiplier == 0){
       syntaxErrorMessage((uint64_t*) "too much dimensions used");
 
-      exit(-1);
+      exit(EXITCODE_PARSERERROR);
     }
 
       load_integer(multiplier);
@@ -3411,18 +3622,455 @@ uint64_t compile_selector_access(uint64_t numberOfSelectors, uint64_t* entry){
       //emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
       emitADD(previousTemporary(), previousTemporary(), currentTemporary());
       tfree(1);
+  }
 
   if(symbol != SYM_RBRACKET){
     syntaxErrorSymbol(SYM_RBRACKET);
 
-    exit(-1);
+    exit(EXITCODE_PARSERERROR);
   }
 
   getSymbol();
 
   return size;
 }
-// hw3 end
+
+//computes the address of a struct field called with ->
+uint64_t compile_structAccess(uint64_t* variableName){
+  struct symbol_table_t* variableEntry;
+  struct symbol_table_t* definitionEntry;
+  struct field_t* fieldEntry;
+  uint64_t* definitionName;
+  uint64_t type;
+  uint64_t offset;
+
+  if(help_variable == 0){
+    //at first look for local struct pointers
+    variableEntry = searchSymbolTable(local_symbol_table, variableName, VARIABLE);
+
+    //if unfound look for global struct pointers
+    if(variableEntry == (struct symbol_table_t*) 0){
+      // variableEntry = global_symbol_table;
+      variableEntry = searchSymbolTable(global_symbol_table, variableName, VARIABLE);
+    }
+  } else {
+    variableEntry = searchSymbolTable(local_symbol_table, variableName, ARRAY);
+
+    //if unfound look for global struct pointers
+    if(variableEntry == (struct symbol_table_t*) 0){
+      // variableEntry = global_symbol_table;
+      variableEntry = searchSymbolTable(global_symbol_table, variableName, ARRAY);
+    }
+    help_variable = 0;
+  }
+  //variable isn't declared
+  if(variableEntry == (struct symbol_table_t*) 0){
+    printLineNumber((uint64_t*) "error", lineNumber);
+    print((uint64_t*) "variable ");
+    print(variableName);
+    print((uint64_t*) " of type struct* undeclared");
+    println();
+
+    exit(EXITCODE_PARSERERROR);
+  }
+
+  type = getVariableType(variableEntry);
+
+  //variable isn't of type structstar
+  if(type != STRUCTSTAR_T){
+    printLineNumber((uint64_t*) "error", lineNumber);
+    print((uint64_t*) "illegal field access for variable ");
+    print(variableName);
+    print((uint64_t*) " of type ");
+    printType(type);
+    println();
+
+    exit(EXITCODE_PARSERERROR);
+  }
+
+  //find struct pointer
+  offset = variableEntry -> address;
+  load_integer(offset);
+  //void emitRFormat(int opcode, int rs, int rt, int rd, int function);
+  //emitADD(uint64_t rd, uint64_t rs1, uint64_t rs2)
+  emitADD(currentTemporary(),variableEntry -> scope,currentTemporary());
+  emitLD(currentTemporary(), currentTemporary(), 0);
+  //load struct pointer
+  //emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+  //get definition of used structtype
+  definitionEntry = variableEntry -> typeStruct -> definition;
+  //definition for struct type unlinked
+  if(definitionEntry == (struct symbol_table_t*) 0){
+    //search definition with name
+    definitionName = variableEntry -> typeStruct -> structName;
+    definitionEntry = searchSymbolTable(global_symbol_table, definitionName, STRUCT);
+    //set definition field if found
+    if(definitionEntry != (struct symbol_table_t*) 0){
+      //set definition
+      variableEntry -> typeStruct -> definition = definitionEntry;
+    }else{
+      //definition not found
+      printLineNumber((uint64_t*) "error", lineNumber);
+      print((uint64_t*) "type of variable ");
+      print(variableName);
+      print((uint64_t*) " undefined");
+      println();
+
+      exit(EXITCODE_PARSERERROR);
+    }
+  }
+
+  getSymbol();
+
+  if(symbol != SYM_IDENTIFIER)
+    syntaxErrorSymbol(SYM_IDENTIFIER);
+
+  //find field offset
+  fieldEntry = getStructField(definitionEntry, identifier);
+  offset = fieldEntry -> offset * REGISTERSIZE; // fieldEntry * 8
+  type = fieldEntry -> type -> type;
+  //add field offset to struct pointer
+  load_integer(offset);
+  //emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_ADDU);
+  emitADD( previousTemporary(),currentTemporary(), previousTemporary());
+  tfree(1);
+
+  getSymbol();
+
+  //compute address for further ->
+  while(symbol == SYM_ARROW){
+    //only for struct pointers allowed
+    variableName = fieldEntry -> name;
+    if(type != STRUCTSTAR_T){
+      printLineNumber((uint64_t*) "error", lineNumber);
+      print((uint64_t*) "illegal field access for variable ");
+      print(variableName);
+      print((uint64_t*) " of type ");
+      printType(type);
+      println();
+
+      exit(EXITCODE_PARSERERROR);
+    }
+
+    //get definition of used structtype
+    definitionEntry = fieldEntry -> type -> definition;
+    //definition for struct type unlinked
+    if(definitionEntry == (struct symbol_table_t*) 0){
+      //get definition with name
+      definitionName = variableEntry -> typeStruct -> structName;
+      definitionEntry = searchSymbolTable(global_symbol_table, definitionName, STRUCT);
+      if(definitionEntry != (struct symbol_table_t*) 0){
+        //set definition
+        variableEntry -> typeStruct-> definition = definitionEntry;
+      }else{
+        //definition not found
+        printLineNumber((uint64_t*) "error", lineNumber);
+        print((uint64_t*) "type of variable ");
+        print(variableName);
+        print((uint64_t*) " undefined");
+        println();
+
+        exit(EXITCODE_PARSERERROR);
+      }
+    }
+
+    getSymbol();
+
+    if(symbol != SYM_IDENTIFIER)
+      syntaxErrorSymbol(SYM_IDENTIFIER);
+
+    //load pointer to next struct
+    //emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    emitLD(currentTemporary(), currentTemporary(), 0);
+
+    fieldEntry = getStructField(definitionEntry, identifier);
+    offset = fieldEntry -> offset * 8; // fieldEntry * REGISTERSIZE
+    type = fieldEntry -> type -> type;
+
+    //add field offset to struct pointer
+    load_integer(offset);
+    //emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_ADDU);
+    emitADD( previousTemporary(),currentTemporary(), previousTemporary());
+
+    tfree(1);
+
+    getSymbol();
+  }
+
+  return type;
+}
+//hw4
+void compile_cstar() {
+  uint64_t type;
+  uint64_t* variableOrProcedureName;
+  uint64_t currentLineNumber;
+  uint64_t initialValue;
+  struct symbol_table_t* entry;
+  //hw3
+  uint64_t dimSize;
+  uint64_t totalSize;
+  //hw4
+  uint64_t* structName;
+  struct symbol_table_t* structDef;
+  uint64_t* variableName;
+  struct symbol_table_t* structEntry;
+  uint64_t offset;
+
+  while (symbol != SYM_EOF) {
+    while (lookForType()) {
+      syntaxErrorUnexpected();
+
+      if (symbol == SYM_EOF)
+        exit(EXITCODE_PARSERERROR);
+      else
+        getSymbol();
+    }
+
+    if (symbol == SYM_VOID) {
+      // void identifier ...
+      // procedure declaration or definition
+      type = VOID_T;
+
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+        variableOrProcedureName = identifier;
+
+        getSymbol();
+
+
+        compile_procedure(variableOrProcedureName, type);
+      } else
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+
+      //hw4 struct record * x;
+    } else if(symbol == SYM_STRUCT){
+      getSymbol();
+
+      if(symbol != SYM_IDENTIFIER){
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+      }else{
+        //record
+        structName = identifier;
+      }
+
+      getSymbol();
+
+      if(symbol == SYM_ASTERISK){
+        getSymbol();
+
+        if(symbol != SYM_IDENTIFIER){
+          syntaxErrorSymbol(SYM_IDENTIFIER);
+
+        }else
+          //x
+          variableOrProcedureName = identifier;
+
+
+        //hw4
+        getSymbol();
+        //struct record * x;
+        if(symbol == SYM_SEMICOLON){
+          //found pointer to struct ,x
+          entry = searchSymbolTable(global_symbol_table, variableOrProcedureName, VARIABLE);
+
+    if (entry == (struct symbol_table_t*) 0) {
+      allocatedMemory = allocatedMemory + SIZEOFUINT64STAR;
+      //y(int whichTable, int* string, int line, int class, int type, int value, int address)
+      entry = createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, STRUCTSTAR_T, 0, -allocatedMemory);
+    } else {
+      // global variable already declared or defined
+      printLineNumber((uint64_t*) "warning", currentLineNumber);
+      print((uint64_t*) "redefinition of global variable ");
+      print(variableOrProcedureName);
+      print((uint64_t*) " ignored");
+      println();
+    }
+
+    getSymbol();
+ //struct record * x[]
+} else if(symbol == SYM_LBRACKET){
+  totalSize = 1;
+  dimSize = 0;
+  arrayDeklaration = 1;
+
+  entry = createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, currentLineNumber, ARRAY, STRUCTSTAR_T, 0, 0);
+
+  while(symbol == SYM_LBRACKET){
+    dimSize = compile_selector(0, entry);
+    //write the new size into the linked list for size in the symbol table entry
+    addDimension(entry, dimSize);
+    totalSize = totalSize * dimSize;
+  }
+  //add the needed memory for the array to calculate the offset of gp pointer
+  allocatedMemory = allocatedMemory + REGISTERSIZE  * totalSize;
+  entry -> address = -allocatedMemory;
+
+  arrayDeklaration = 0;
+
+  if(symbol != SYM_SEMICOLON){
+    syntaxErrorSymbol(SYM_SEMICOLON);
+
+    exit(EXITCODE_PARSERERROR);
+  }
+  getSymbol();
+  //struct record * x()
+} else if(symbol == SYM_LPARENTHESIS){
+    //found procedure with returntype STRUCTSTAR_T
+    compile_procedure(variableOrProcedureName, STRUCTSTAR_T);
+
+    entry = searchSymbolTable(global_symbol_table, variableOrProcedureName, PROCEDURE);
+
+  }else
+    syntaxErrorUnexpected();
+
+  //set definition and type name
+  structDef = searchSymbolTable(global_symbol_table, structName, STRUCT);
+  //type record
+  entry -> typeStruct -> structName = structName;
+  //entry record
+  entry -> typeStruct -> definition = structDef;
+
+  //hw4
+    } else {
+        entry = searchSymbolTable(global_symbol_table, structName, STRUCT);
+
+        if((uint64_t) entry != 0){
+          // global struct already defined
+          printLineNumber((uint64_t*) "warning", lineNumber);
+          print((uint64_t*) "redefinition of struct ");
+          print(structName);
+          print((uint64_t*) " ignored");
+          println();
+          return;
+        }
+
+        entry = createSymbolTableEntry(GLOBAL_TABLE, structName, lineNumber, STRUCT, 0, 0, 0);
+
+        if(symbol != SYM_LBRACE)
+          syntaxErrorSymbol(SYM_LBRACE);
+        getSymbol();
+
+        offset = 0;
+        while(lookForType() == 0){
+          type = compile_type();
+          //struct record *
+          if(type == STRUCTSTAR_T){
+            //record,type
+            structName = structTypeName;
+            structEntry = searchSymbolTable(global_symbol_table, structName, STRUCT);
+          }else{
+            //type
+            structName = (uint64_t*) 0;
+            structEntry = (struct symbol_table_t*) 0;
+          }
+
+          if(symbol == SYM_IDENTIFIER){
+            variableName = identifier;
+          }else{
+            syntaxErrorSymbol(SYM_IDENTIFIER);
+          }
+
+          addStructElement(entry, variableName, type, structName, structEntry, offset);
+
+          getSymbol();
+          if(symbol != SYM_SEMICOLON)
+            syntaxErrorSymbol(SYM_SEMICOLON);
+
+          getSymbol();
+
+          offset = offset + 1;
+        }
+
+        if(symbol != SYM_RBRACE)
+          syntaxErrorSymbol(SYM_RBRACE);
+        getSymbol();
+
+        if(symbol != SYM_SEMICOLON)
+          syntaxErrorSymbol(SYM_SEMICOLON);
+
+        getSymbol();
+         }
+
+  //hw4
+
+    } else {
+      type = compile_type();
+
+      if (symbol == SYM_IDENTIFIER) {
+        variableOrProcedureName = identifier;
+
+        getSymbol();
+
+        if (symbol == SYM_LPARENTHESIS)
+          // type identifier "(" ...
+          // procedure declaration or definition
+          compile_procedure(variableOrProcedureName, type);
+        //hw3
+        // type identifier "["
+        else if(symbol == SYM_LBRACKET){ // compile_cstar for Array
+          totalSize = 1;
+          dimSize = 0;
+          arrayDeklaration = 1;
+
+          entry = createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, currentLineNumber, ARRAY, type, 0, 0);
+
+          while(symbol == SYM_LBRACKET){
+            dimSize = compile_selector(0, entry);
+            //write the new size into the linked list for size in the symbol table entry
+            addDimension(entry, dimSize);
+            totalSize = totalSize * dimSize;
+          }
+          //add the needed memory for the array to calculate the offset of gp pointer
+          allocatedMemory = allocatedMemory + REGISTERSIZE  * totalSize;
+          entry -> address = -allocatedMemory;
+
+          arrayDeklaration = 0;
+
+          if(symbol != SYM_SEMICOLON){
+            syntaxErrorSymbol(SYM_SEMICOLON);
+
+            exit(EXITCODE_PARSERERROR);
+          }
+          getSymbol();
+          //hw3
+        }else {
+          currentLineNumber = lineNumber;
+
+          if (symbol == SYM_SEMICOLON) {
+            // type identifier ";" ...
+            // global variable declaration
+            getSymbol();
+
+            initialValue = 0;
+
+          } else
+            // type identifier "=" ...
+            // global variable definition
+            initialValue = compile_initialization(type);
+
+          entry = searchSymbolTable(global_symbol_table, variableOrProcedureName, VARIABLE);
+
+          if (entry == (struct symbol_table_t*) 0) {
+            allocatedMemory = allocatedMemory + REGISTERSIZE ;
+
+            createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, currentLineNumber, VARIABLE, type, initialValue, -allocatedMemory);
+          } else {
+            // global variable already declared or defined
+            printLineNumber((uint64_t*) "warning", currentLineNumber);
+            print((uint64_t*) "redefinition of global variable ");
+            print(variableOrProcedureName);
+            print((uint64_t*) " ignored");
+            println();
+          }
+        }
+      } else
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+    }
+  }
+}
+
 
 uint64_t compile_factor() {
   uint64_t hasCast;
@@ -3430,8 +4078,9 @@ uint64_t compile_factor() {
   uint64_t type;
   //hw3 start
   uint64_t selectorNum;
-  uint64_t* entry;
-  //hw3 end
+  struct symbol_table_t* entry;
+  uint64_t hilftype;
+
 
   uint64_t* variableOrProcedureName;
 
@@ -3440,6 +4089,7 @@ uint64_t compile_factor() {
   hasCast = 0;
 
   type = UINT64_T;
+  hilftype = UINT64_T;
 
   while (lookForFactor()) {
     syntaxErrorUnexpected();
@@ -3466,7 +4116,19 @@ uint64_t compile_factor() {
         syntaxErrorSymbol(SYM_RPARENTHESIS);
 
     // not a cast: "(" expression ")"
-    } else {
+    } else  if (symbol == SYM_STRUCT) {
+          hasCast = 1;
+
+          cast = compile_type();
+
+          if (symbol == SYM_RPARENTHESIS)
+            getSymbol();
+          else
+            syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+        // not a cast: "(" expression ")"
+        }
+    else {
       type = compile_expression();
 
       if (symbol == SYM_RPARENTHESIS)
@@ -3490,31 +4152,43 @@ uint64_t compile_factor() {
       getSymbol();
       //["*"] identifier [ selector ]
       if(symbol == SYM_LBRACKET){
-        entry = getArrayVariable(variableOrProcedureName);
 
-        type = getType(entry);
-        if(type != UINT64STAR_T){
-          typeWarning(UINT64STAR_T, type);
+        entry =  getArrayVariable(identifier);
+
+
+
+        if((uint64_t) entry == 0){
+          printLineNumber((  uint64_t*) "error", lineNumber);
+          print(variableOrProcedureName);
+          print((  uint64_t*) " undeclared");
+          println();
+
+          exit(EXITCODE_PARSERERROR);
         }
+        type =  getVariableType(entry);
 
         //initialize address register with startaddress of array
-        load_integer(getAddress(entry));
-        //void emitRFormat(int opcode, int rs, int rt, int rd, int function);
+        load_integer(entry -> address);
+
         //ADD   rd,rs1,rs2
-        //emitRFormat(OP_SPECIAL, getScope(entry), currentTemporary(), currentTemporary(), FCT_ADDU);
-        emitADD(currentTemporary(),getScope(entry), currentTemporary());
+
+        emitADD(currentTemporary(),entry -> scope, currentTemporary());
 
         selectorNum = 1;
         while(symbol == SYM_LBRACKET){
           getSymbol();
 
-          compile_selector_access(selectorNum, entry);
+          compile_selector(selectorNum, entry);
 
           selectorNum = selectorNum +1;
         }
-
+         if(symbol == SYM_ARROW){
+        //
+          help_variable = 1;
+           hilftype = compile_structAccess(identifier);
+         }
         //in case of to few dimension an pointer at the first entry of first lost dimension will be returned
-        if((selectorNum-1)<getArrayDimension(entry)){
+        if((selectorNum-1)< entry -> numberOfDimensions){
           if(type != UINT64_T){
             typeWarning(UINT64_T, type);
           }
@@ -3523,15 +4197,29 @@ uint64_t compile_factor() {
             typeWarning(UINT64STAR_T, type);
           }
           //load pointer from specified array position
-          //void emitIFormat(int opcode, int rs, int rt, int immediate);
-        //  emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+          //  // dereference
         emitLD(currentTemporary(), currentTemporary(), 0) ;
-      }
-    } else
-      // variable access: identifier
-      type = load_variableOrBigInt(identifier, VARIABLE);
-    // integer?
-    //h3 end
+}
+  type =  hilftype;
+  //hw4
+}else if(symbol == SYM_ARROW){
+
+  type = compile_structAccess(identifier);
+
+  if(type != UINT64STAR_T)
+    typeWarning(UINT64STAR_T, type);
+
+  //load pointer from structs memory
+
+  emitLD(currentTemporary(), currentTemporary(), 0) ;
+
+}
+ else
+  // variable access: identifier
+
+        type = load_variableOrBigInt(identifier, VARIABLE);
+
+
     // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
@@ -3573,35 +4261,63 @@ uint64_t compile_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitADDI(REG_A0, REG_ZR, 0);
-    }
+    }//hw3
     else  if(symbol == SYM_LBRACKET){
-        entry = getArrayVariable(variableOrProcedureName);
 
-        type = getType(entry);
+        entry =  getArrayVariable(variableOrProcedureName);
+
+
+
+        if((uint64_t) entry == 0){
+          printLineNumber((uint64_t*) "error", lineNumber);
+          print(variableOrProcedureName);
+          print((uint64_t*) " undeclared");
+          println();
+
+          exit(EXITCODE_PARSERERROR);
+        }
+
+        type =  getVariableType(entry);
 
         //initialize address register with startaddress of array
-        load_integer(getAddress(entry));
-        emitADD(currentTemporary(),getScope(entry), currentTemporary());
+        load_integer(entry -> address);
+        emitADD(currentTemporary(),entry -> scope, currentTemporary());
 
         selectorNum = 1;
         while(symbol == SYM_LBRACKET){
           getSymbol();
 
-          compile_selector_access(selectorNum, entry);
+          compile_selector(selectorNum, entry);
 
           selectorNum = selectorNum +1;
         }
+        if(symbol == SYM_ARROW){
+          help_variable = 1;
+         type = compile_structAccess(variableOrProcedureName);
+
+         //load value from structs memory
+         emitLD(currentTemporary(), currentTemporary(), 0) ;
+
+       }
 
         //in case of to few dimension an pointer at the first entry of first lost dimension will be returned
-        if((selectorNum-1)<getArrayDimension(entry)){
-          type = UINT64STAR_T;
-        }else{
-          //load data from specified array position
+        else{
+          if((selectorNum-1)< entry -> numberOfDimensions){
+           type = UINT64STAR_T;
+         }else{
+
           //load data from specified array position
         emitLD(currentTemporary(), currentTemporary(), 0) ;
-        }
+       }
+}
 
-        //hw3 end
+      //hw4
+      } else if(symbol == SYM_ARROW){
+
+        type = compile_structAccess(variableOrProcedureName);
+
+        //load value from structs memory
+        emitLD(currentTemporary(), currentTemporary(), 0) ;
     } else
       // variable access: identifier
       type = load_variableOrBigInt(variableOrProcedureName, VARIABLE);
@@ -3652,259 +4368,6 @@ uint64_t compile_factor() {
   else
     return type;
 }
-// uint64_t compile_factor() {
-//   uint64_t hasCast;
-//   uint64_t cast;
-//   uint64_t type;
-//   uint64_t numberOfSelectors; // hw3
-//   uint64_t* entry;            // hw3
-//
-//   uint64_t* variableOrProcedureName;
-//
-//   // assert: n = allocatedTemporaries
-//
-//   hasCast = 0;
-//
-//   type = UINT64_T;
-//
-//   while (lookForFactor()) {
-//     syntaxErrorUnexpected();
-//
-//     if (symbol == SYM_EOF)
-//       exit(EXITCODE_PARSERERROR);
-//     else
-//       getSymbol();
-//   }
-//
-//   // optional cast: [ cast ]
-//   if (symbol == SYM_LPARENTHESIS) {
-//     getSymbol();
-//
-//     // cast: "(" "uint64_t" [ "*" ] ")"
-//     if (symbol == SYM_UINT64) {
-//       hasCast = 1;
-//
-//       cast = compile_type();
-//
-//       if (symbol == SYM_RPARENTHESIS)
-//         getSymbol();
-//       else
-//         syntaxErrorSymbol(SYM_RPARENTHESIS);
-//
-//     // not a cast: "(" expression ")"
-//     } else {
-//       type = compile_expression();
-//
-//       if (symbol == SYM_RPARENTHESIS)
-//         getSymbol();
-//       else
-//         syntaxErrorSymbol(SYM_RPARENTHESIS);
-//
-//       // assert: allocatedTemporaries == n + 1
-//
-//       return type;
-//     }
-//   }
-//
-//   // dereference?
-//   if (symbol == SYM_ASTERISK) {
-//     getSymbol();
-//
-//     // ["*"] identifier
-//     if (symbol == SYM_IDENTIFIER) {
-//       // hw3 start
-//       // variableOrProcedureName = identifier;
-//       getSymbol();
-//       //["*"] identifier [ selector ]
-//       if(symbol == SYM_LBRACKET){
-//         entry = global_symbol_table;
-//
-//         // entry = searchSymbolTable(entry, identifier, ARRAY);
-//         entry = getArrayVariable(variableOrProcedureName);
-//
-//         // if((uint64_t) entry == 0){
-//         //   printLineNumber((  uint64_t*) "error", lineNumber);
-//         //   print(variableOrProcedureName);
-//         //   print((  uint64_t*) " undeclared");
-//         //   println();
-//         //
-//         //   exit(-1);
-//         // }
-//         type = getType(entry);
-//
-//         //initialize address register with startaddress of array
-//         load_integer(getAddress(entry));
-//         //void emitRFormat(int opcode, int rs, int rt, int rd, int function);
-//         //ADD   rd,rs1,rs2
-//         //emitRFormat(OP_SPECIAL, getScope(entry), currentTemporary(), currentTemporary(), FCT_ADDU);
-//         emitADD(currentTemporary(),getScope(entry), currentTemporary());
-//
-//         numberOfSelectors = 1;
-//         while(symbol == SYM_LBRACKET){
-//           getSymbol();
-//
-//           compile_selector_access(numberOfSelectors, entry);
-//
-//           numberOfSelectors = numberOfSelectors +1;
-//         }
-//
-//         //in case of to few dimension an pointer at the first entry of first lost dimension will be returned
-//         if((numberOfSelectors-1)<getArrayDimension(entry)){
-//           if(type != UINT64_T){
-//             typeWarning(UINT64_T, type);
-//           }
-//         }else{
-//           if(type != UINT64STAR_T){
-//             typeWarning(UINT64STAR_T, type);
-//           }
-//           //load pointer from specified array position
-//           //void emitIFormat(int opcode, int rs, int rt, int immediate);
-//         //  emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-//         emitLD(currentTemporary(), currentTemporary(), 0) ;
-//       }
-//     } else
-//     // variable access: identifier
-//
-//         type = load_variableOrBigInt(identifier, VARIABLE);
-//
-// // integer?
-//       //h3 end
-//       //type = load_variableOrBigInt(identifier, VARIABLE);
-//
-//       //getSymbol();
-//
-//     // * "(" expression ")"
-//     } else if (symbol == SYM_LPARENTHESIS) {
-//       getSymbol();
-//
-//       type = compile_expression();
-//
-//       if (symbol == SYM_RPARENTHESIS)
-//         getSymbol();
-//       else
-//         syntaxErrorSymbol(SYM_RPARENTHESIS);
-//     } else
-//       syntaxErrorUnexpected();
-//
-//     if (type != UINT64STAR_T)
-//       typeWarning(UINT64STAR_T, type);
-//
-//     // dereference
-//     emitLD(currentTemporary(), currentTemporary(), 0);
-//
-//     type = UINT64_T;
-//
-//   // identifier?
-//   } else if (symbol == SYM_IDENTIFIER) {
-//     variableOrProcedureName = identifier;
-//
-//     getSymbol();
-//
-//     if (symbol == SYM_LPARENTHESIS) {
-//       getSymbol();
-//
-//       // procedure call: identifier "(" ... ")"
-//       type = compile_call(variableOrProcedureName);
-//
-//       talloc();
-//
-//       // retrieve return value
-//       emitADDI(currentTemporary(), REG_A0, 0);
-//
-//       // reset return register to initial return value
-//       // for missing return expressions
-//       emitADDI(REG_A0, REG_ZR, 0);
-//     } else  if(symbol == SYM_LBRACKET){
-//         entry = global_symbol_table;
-//
-//         entry = searchSymbolTable(entry, variableOrProcedureName, ARRAY);
-//         // entry = getArrayVariable(variableOrProcedureName);
-//
-//         if((uint64_t) entry == 0){
-//           printLineNumber((uint64_t*) "error", lineNumber);
-//           print(variableOrProcedureName);
-//           print((uint64_t*) " undeclared");
-//           println();
-//
-//           exit(-1);
-//         }
-//
-//         type = getType(entry);
-//
-//         //initialize address register with startaddress of array
-//         load_integer(getAddress(entry));
-//         emitADD(currentTemporary(),getScope(entry), currentTemporary());
-//
-//         numberOfSelectors = 1;
-//         while(symbol == SYM_LBRACKET){
-//           getSymbol();
-//
-//           compile_selector_access(numberOfSelectors, entry);
-//
-//           numberOfSelectors = numberOfSelectors +1;
-//         }
-//
-//         //in case of to few dimension an pointer at the first entry of first lost dimension will be returned
-//         if((numberOfSelectors-1)<getArrayDimension(entry)){
-//           type = UINT64STAR_T;
-//         }else{
-//           //load data from specified array position
-//           //load data from specified array position
-//         emitLD(currentTemporary(), currentTemporary(), 0) ;
-//         }
-//
-//         // hw3 end
-//     } else
-//       // variable access: identifier
-//       type = load_variableOrBigInt(variableOrProcedureName, VARIABLE);
-//
-//   // integer?
-//   } else if (symbol == SYM_INTEGER) {
-//     load_integer(literal);
-//
-//     getSymbol();
-//
-//     type = UINT64_T;
-//
-//   // character?
-//   } else if (symbol == SYM_CHARACTER) {
-//     talloc();
-//
-//     emitADDI(currentTemporary(), REG_ZR, literal);
-//
-//     getSymbol();
-//
-//     type = UINT64_T;
-//
-//   // string?
-//   } else if (symbol == SYM_STRING) {
-//     load_string(string);
-//
-//     getSymbol();
-//
-//     type = UINT64STAR_T;
-//
-//   //  "(" expression ")"
-//   } else if (symbol == SYM_LPARENTHESIS) {
-//     getSymbol();
-//
-//     type = compile_expression();
-//
-//     if (symbol == SYM_RPARENTHESIS)
-//       getSymbol();
-//     else
-//       syntaxErrorSymbol(SYM_RPARENTHESIS);
-//   } else
-//     syntaxErrorUnexpected();
-//
-//   // assert: allocatedTemporaries == n + 1
-//
-//   if (hasCast)
-//     return cast;
-//   else
-//     return type;
-// }
-
 uint64_t compile_term() {
   uint64_t ltype;
   uint64_t operatorSymbol;
@@ -3949,7 +4412,6 @@ uint64_t compile_simpleExpression() {
   uint64_t operatorSymbol;
   uint64_t rtype;
 
-  // assert: n = allocatedTemporaries
   // assert: n = allocatedTemporaries
 
   // optional: -
@@ -4035,8 +4497,7 @@ uint64_t compile_simpleExpression() {
 
   return ltype;
 }
-// hw2 start
-uint64_t compile_bitwiseShift(){
+uint64_t compile_bitwiseShift () {
   uint64_t ltype;
   uint64_t operatorSymbol;
   uint64_t rtype;
@@ -4046,7 +4507,7 @@ uint64_t compile_bitwiseShift(){
   // assert: allocatedTemporaries == n + 1
 
   // + or -?
-  while (isBitwiseShift()) {
+  while (isShift()) {
     operatorSymbol = symbol;
 
     getSymbol();
@@ -4057,7 +4518,6 @@ uint64_t compile_bitwiseShift(){
 
       //R[rd] = R[rs1] << R[rs2]
       //rd,rs1,rs2
-
       emitSLL(previousTemporary(), previousTemporary(), currentTemporary());
 
     } else if (operatorSymbol == SYM_BITWISERIGHTSHIFT) {
@@ -4073,7 +4533,6 @@ uint64_t compile_bitwiseShift(){
 
   return ltype;
 }
-// hw2 end
 uint64_t compile_expression() {
   uint64_t ltype;
   uint64_t operatorSymbol;
@@ -4081,7 +4540,7 @@ uint64_t compile_expression() {
 
   // assert: n = allocatedTemporaries
 
-  ltype = compile_bitwiseShift(); // hw2
+  ltype = compile_bitwiseShift();
 
   // assert: allocatedTemporaries == n + 1
 
@@ -4091,7 +4550,7 @@ uint64_t compile_expression() {
 
     getSymbol();
 
-    rtype = compile_bitwiseShift(); // hw2
+    rtype = compile_bitwiseShift();
 
     // assert: allocatedTemporaries == n + 2
 
@@ -4344,17 +4803,15 @@ void compile_return() {
 
   numberOfReturn = numberOfReturn + 1;
 }
-
-
-
 void compile_statement() {
   uint64_t ltype;
   uint64_t rtype;
   uint64_t* variableOrProcedureName;
-  uint64_t* entry;
+  struct symbol_table_t* entry;
   uint64_t offset;
-  uint64_t numberOfSelectors;
-
+  uint64_t selectorNum;
+  //hw40
+  uint64_t* leftStructType;
   // assert: allocatedTemporaries == 0
 
   while (lookForStatement()) {
@@ -4372,18 +4829,17 @@ void compile_statement() {
 
     // "*" identifier
     if (symbol == SYM_IDENTIFIER) {
-      // hw3
+      //hw3
       variableOrProcedureName = identifier;
 
       getSymbol();
 
-      // "*" identifier "="
       if (symbol == SYM_ASSIGN) {
-        ltype = load_variableOrBigInt(identifier, VARIABLE);
+          ltype = load_variableOrBigInt(identifier, VARIABLE);
 
-        if (ltype != UINT64STAR_T)
-          typeWarning(UINT64STAR_T, ltype);
-        // hw3
+          if (ltype != UINT64STAR_T)
+            typeWarning(UINT64STAR_T, ltype);
+            //hw3
         getSymbol();
 
         rtype = compile_expression();
@@ -4396,61 +4852,122 @@ void compile_statement() {
         tfree(2);
 
         numberOfAssignments = numberOfAssignments + 1;
-      // hw3 start
+       //hw3 start
       //"*" identifier [ selector ] "="
-    } else if(symbol == SYM_LBRACKET){
-      entry = global_symbol_table;
+    }else if(symbol == SYM_LBRACKET){
+    //seach local,global
 
-      // entry = searchSymbolTable(entry, variableOrProcedureName, ARRAY);
       entry = getArrayVariable(variableOrProcedureName);
+      //fehler
+      if((uint64_t) entry == 0){
+        printLineNumber((uint64_t*) "error", lineNumber);
+        print(variableOrProcedureName);
+        print((uint64_t*) " undeclared");
+        println();
 
-      ltype = getType(entry);
+        exit(EXITCODE_PARSERERROR);
+      }
+
+      ltype = getVariableType(entry);
       if(ltype != UINT64STAR_T){
         typeWarning(UINT64STAR_T, ltype);
       }
 
-      //initialize address register with startaddress of array
-      load_integer(getAddress(entry));
-      //void emitRFormat(int opcode, int rs, int rt, int rd, int function);
-      // GPR[rd] ← GPR[rs] + GPR[rt]
-      //uint64_t rd, uint64_t rs1, uint64_t rs2);
-      emitADD( currentTemporary(), getScope(entry), currentTemporary());
+      //initialize address register with startaddress of array (-allocm)
+      load_integer(entry -> address);
+      //+ fp +sp
+      emitADD( currentTemporary(), entry -> scope, currentTemporary());
 
-      numberOfSelectors = 1;
+      selectorNum = 1;
       while(symbol == SYM_LBRACKET){
         getSymbol();
 
-        compile_selector_access(numberOfSelectors, entry);
+        compile_selector(selectorNum, entry);
 
-        numberOfSelectors = numberOfSelectors +1;
+        selectorNum = selectorNum +1;
       }
 
-      if(symbol != SYM_ASSIGN){
-        syntaxErrorSymbol(SYM_ASSIGN);
+      if(symbol == SYM_ASSIGN){
+        getSymbol();
+
+        rtype = compile_expression();
+
+        if(ltype != rtype){
+          typeWarning(ltype, rtype);
+        }
+
+      }else if(symbol == SYM_ARROW){
+        help_variable = 1;
+        ltype = compile_structAccess(identifier);
+
+        //asterisk works only for INTSTAR_T
+        if(ltype != UINT64STAR_T)
+          typeWarning(UINT64STAR_T, ltype);
+
+        //load pointer from specified struct position
+        //emitLD( currentTemporary(), currentTemporary(), 0);
+
+        if(symbol != SYM_ASSIGN)
+          syntaxErrorSymbol(SYM_ASSIGN);
+
+        getSymbol();
+
+        rtype = compile_expression();
+
+        //and INT_T
+        if(rtype != UINT64_T)
+          typeWarning(UINT64_T, rtype);
       }
-      getSymbol();
 
-      rtype = compile_expression();
 
-      //gr_expression must return an int
-      if(rtype != UINT64_T){
-        typeWarning(UINT64_T, rtype);
-      }
+    //load pointer from specified array position
 
-      //load pointer from specified array position
-      //void emitIFormat(int opcode, int rs, int rt, int immediate);
-      // R[rd] = M_4B[ R[rs1] + sext(imm) ]
-      emitLD( previousTemporary(), previousTemporary(), 0);
-      // memory[GPR[base] + offset] ← GPR[rt]
+
+      //emitLD( previousTemporary(), previousTemporary(), 0);
+      emitLD(currentTemporary(),currentTemporary(), 0);
+
       //store value to pointed address
-      //D(uint64_t rs1, uint64_t immediate, uint64_t rs2);
+
       //[ R[rs1] + sext(imm) ] = R[rs2]
       emitSD( previousTemporary(), 0, currentTemporary());
+
       tfree(2);
 
       numberOfAssignments = numberOfAssignments + 1;
-    // hw3 end
-    }
+    //hw3 end
+      //hw4 *x ->y
+      }else if(symbol == SYM_ARROW){
+
+        ltype = compile_structAccess(identifier);
+
+        //asterisk works only for INTSTAR_T
+        if(ltype != UINT64STAR_T)
+          typeWarning(UINT64STAR_T, ltype);
+
+        //load pointer from specified struct position
+        emitLD( currentTemporary(), currentTemporary(), 0);
+
+        if(symbol != SYM_ASSIGN)
+          syntaxErrorSymbol(SYM_ASSIGN);
+
+        getSymbol();
+
+        rtype = compile_expression();
+
+        //and INT_T
+        if(rtype != UINT64_T)
+          typeWarning(UINT64_T, rtype);
+
+
+
+        //store value to pointed address
+
+        emitSD( previousTemporary(), 0, currentTemporary());
+        tfree(2);
+
+        numberOfAssignments = numberOfAssignments + 1;
+
+      }
       else {
         syntaxErrorSymbol(SYM_ASSIGN);
 
@@ -4528,7 +5045,8 @@ void compile_statement() {
     } else if (symbol == SYM_ASSIGN) {
       entry = getVariableOrBigInt(variableOrProcedureName, VARIABLE);
 
-      ltype = getType(entry);
+      ltype =  getVariableType(entry);
+
 
       getSymbol();
 
@@ -4537,16 +5055,16 @@ void compile_statement() {
       if (ltype != rtype)
         typeWarning(ltype, rtype);
 
-      offset = getAddress(entry);
+      offset = entry -> address;
 
       if (isSignedInteger(offset, 12)) {
-        emitSD(getScope(entry), offset, currentTemporary());
+        emitSD(entry -> scope, offset, currentTemporary());
 
         tfree(1);
       } else {
         load_integer(offset);
 
-        emitADD(currentTemporary(), getScope(entry), currentTemporary());
+        emitADD(currentTemporary(), entry -> scope, currentTemporary());
         emitSD(currentTemporary(), 0, previousTemporary());
 
         tfree(2);
@@ -4558,65 +5076,106 @@ void compile_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
-        // hw3 start
+        //hw3 start
         // identifier [ selector ] = expression | call;
-      } else if(symbol == SYM_LBRACKET){
-        entry = global_symbol_table;
+      }else if(symbol == SYM_LBRACKET){
+      //global or local
+    entry =   getArrayVariable(variableOrProcedureName);
 
-        // entry = searchSymbolTable(entry, variableOrProcedureName, ARRAY);
-        entry = getArrayVariable(variableOrProcedureName);
+        if((uint64_t) entry == 0){
+          printLineNumber((uint64_t*) "error", lineNumber);
+          print(variableOrProcedureName);
+          print((uint64_t*) " undeclared");
+          println();
 
-        ltype = getType(entry);
+          exit(EXITCODE_PARSERERROR);
+        }
+
+        ltype =  getVariableType(entry);
 
         //initialize address register with startaddress of array
-        load_integer(getAddress(entry));
-        //void emitRFormat(int opcode, int rs, int rt, int rd, int function);
-        // GPR[rd] ← GPR[rs] + GPR[rt]
-        //uint64_t rd, uint64_t rs1, uint64_t rs2);
-        emitADD( currentTemporary(), getScope(entry), currentTemporary());
+        load_integer(entry -> address);
+        //adress + fp or sp
+
+        emitADD( currentTemporary(), entry -> scope, currentTemporary());
 
 
         //iterate through found selectors
-        numberOfSelectors = 1;
+        selectorNum = 1;
         while(symbol == SYM_LBRACKET){
           getSymbol();
 
-          compile_selector_access(numberOfSelectors, entry);
+          compile_selector(selectorNum, entry);
 
-          numberOfSelectors = numberOfSelectors +1;
+          selectorNum = selectorNum +1;
         }
 
         //search for assignment
-        if(symbol != SYM_ASSIGN){
-          syntaxErrorSymbol(SYM_ASSIGN);
+        if(symbol == SYM_ASSIGN){
+          getSymbol();
+
+          rtype = compile_expression();
+
+          if(ltype != rtype){
+            typeWarning(ltype, rtype);
+          }
+          if(symbol != SYM_SEMICOLON){
+            syntaxErrorSymbol(SYM_SEMICOLON);
+          }
+        }else if(symbol == SYM_ARROW){
+          help_variable = 1;
+          ltype = compile_structAccess(identifier);
+
+
+
+          if(symbol != SYM_ASSIGN)
+            syntaxErrorSymbol(SYM_ASSIGN);
+
+          getSymbol();
+
+          rtype = compile_expression();
         }
-        getSymbol();
 
-        rtype = compile_expression();
 
-        if(ltype != rtype){
-          typeWarning(ltype, rtype);
-        }
 
-        //store new value
-        //memory[GPR[base] + offset] ← GPR[rt]
-        //store value to pointed address
-        //D(uint64_t rs1, uint64_t immediate, uint64_t rs2);
-        //[ R[rs1] + sext(imm) ] = R[rs2]
-        //void emitIFormat(int opcode, int rs, int rt, int immediate);
         emitSD( previousTemporary(), 0, currentTemporary());
 
         tfree(2);
 
         numberOfAssignments = numberOfAssignments + 1;
 
-        if(symbol != SYM_SEMICOLON){
-          syntaxErrorSymbol(SYM_SEMICOLON);
-        }
+
         getSymbol();
 
-        // hw3 end
-    } else
+        //hw3 end
+    }else if(symbol == SYM_ARROW){
+
+      ltype = compile_structAccess(identifier);
+
+
+
+      if(symbol != SYM_ASSIGN)
+        syntaxErrorSymbol(SYM_ASSIGN);
+
+      getSymbol();
+
+      rtype = compile_expression();
+
+
+
+
+
+      getSymbol();
+
+      //store value to struct field
+
+      emitSD( previousTemporary(), 0 ,currentTemporary());
+      tfree(2);
+
+      numberOfAssignments = numberOfAssignments + 1;
+
+    }
+     else
       syntaxErrorUnexpected();
   }
   // while statement?
@@ -4638,6 +5197,7 @@ void compile_statement() {
   }
 }
 
+
 uint64_t compile_type() {
   uint64_t type;
 
@@ -4651,77 +5211,89 @@ uint64_t compile_type() {
 
       getSymbol();
     }
+    //hw4 start
+  } else if(symbol == SYM_STRUCT){
+
+    getSymbol();
+
+    if(symbol != SYM_IDENTIFIER)
+      syntaxErrorSymbol(SYM_IDENTIFIER);
+
+    //pass additional struct type information to higher levels
+    structTypeName = identifier;
+
+    getSymbol();
+
+    if(symbol != SYM_ASTERISK)
+      syntaxErrorSymbol(SYM_ASTERISK);
+
+    getSymbol();
+
+    type = STRUCTSTAR_T;
   } else
     syntaxErrorSymbol(SYM_UINT64);
 
   return type;
 }
-
 void compile_variable(uint64_t offset) {
   uint64_t type;
-  uint64_t* entry;
+  struct symbol_table_t* entry;//hw4
+  struct symbol_table_t* def;//hw4
+
   //hw3 start
   uint64_t dimSize;
   uint64_t totalSize;
   uint64_t* newDimension;
   totalSize = 0;
-  //hw3 end
 
   type = compile_type();
 
   if (symbol == SYM_IDENTIFIER) {
-     getSymbol();
-     if(symbol == SYM_LBRACKET){
-       totalSize = 1;
-       dimSize = 0;
-       arrayDeklaration = 1;
-       //int* createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address);
-       entry = createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, ARRAY, type, 0, 0);
+   getSymbol();
+   if(symbol == SYM_LBRACKET){
+     totalSize = 1;
+     dimSize = 0;
+     arrayDeklaration = 1;
+     //int* createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address);
+     entry = createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, ARRAY, type, 0, 0);
 
-       while(symbol == SYM_LBRACKET){
-        getSymbol();
-        if(symbol == SYM_INTEGER ){
-          getSymbol();
+     while(symbol == SYM_LBRACKET){
+       dimSize = compile_selector(0, entry);
+       //write the new size into the linked list for size in the symbol table entry
+       addDimension(entry, dimSize);
+       totalSize = totalSize * dimSize;
+     }
+     hilfbits = totalSize -1;
+     offset = offset - REGISTERSIZE * totalSize;
+     entry -> address = offset;
+     arrayDeklaration = 0;
 
-        }
-        dimSize  = literal;
-        if(symbol != SYM_RBRACKET){
-            syntaxErrorSymbol(SYM_RBRACKET);
-            exit(EXITCODE_PARSERERROR);
-        }
-         getSymbol();
+     if(type == STRUCTSTAR_T){
+       entry -> typeStruct -> type = STRUCTSTAR_T;
+       entry -> typeStruct -> structName = structTypeName;
+       def = searchSymbolTable(global_symbol_table, structTypeName, STRUCT);
+       entry -> typeStruct -> definition = def;
+     }
 
-        //adress speicher allocieren
-        newDimension = malloc(SIZEOFUINT64STAR + SIZEOFUINT64);
-        //dim= literal
-        *(newDimension + 1) =  dimSize;
-        //adds a new array dimension to a symbol table entry
-        //1,2,3..
-        setArrayDimension(entry,getArrayDimension(entry) + 1);
-        //1*literale*literal
-        setTotalSizeOfArray(entry, getTotalSizeOfArray(entry) * dimSize);
-        //  size = newDimension;
-        setArraySize(entry, newDimension);
+   //hw4 start
+   } else {
+     entry = createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
+     if(type == STRUCTSTAR_T){
+       entry -> typeStruct -> structName = structTypeName;
+       def = searchSymbolTable(global_symbol_table, structTypeName, STRUCT);
+       entry -> typeStruct -> definition = def;
+     }
+     //hw4 end
+     hilfbits = totalSize;
+   }
+ } else {
+   syntaxErrorSymbol(SYM_IDENTIFIER);
 
-         totalSize = totalSize * dimSize;
-       }
-       hilfbits = totalSize - 1;
-       offset = offset - REGISTERSIZE * totalSize;
-       setAddress(entry,offset);
-
-
-   }  else{
-    // TODO: check if identifier has already been declared
-    createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
-    hilfbits = totalSize;
-
-    }
-  } else {
-    syntaxErrorSymbol(SYM_IDENTIFIER);
-
-    createSymbolTableEntry(LOCAL_TABLE, (uint64_t*) "missing variable name", lineNumber, VARIABLE, type, 0, offset);
+   createSymbolTableEntry(LOCAL_TABLE, (uint64_t*) "missing variable name", lineNumber, VARIABLE, type, 0, offset);
   }
+
 }
+
 
 uint64_t compile_initialization(uint64_t type) {
   uint64_t initialValue;
@@ -4787,7 +5359,7 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
   uint64_t numberOfParameters;
   uint64_t parameters;
   uint64_t localVariables;
-  uint64_t* entry;
+  struct symbol_table_t* entry;
 
   // assuming procedure is undefined
   isUndefined = 1;
@@ -4817,11 +5389,11 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
 
       while (parameters < numberOfParameters) {
         // 8 bytes offset to skip frame pointer and link
-        setAddress(entry, parameters * REGISTERSIZE + 2 * REGISTERSIZE);
+        entry -> address = parameters * REGISTERSIZE + 2 * REGISTERSIZE;
 
         parameters = parameters + 1;
 
-        entry = getNextEntry(entry);
+        entry = entry -> next;
       }
 
       if (symbol == SYM_RPARENTHESIS)
@@ -4837,28 +5409,28 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
 
   if (symbol == SYM_SEMICOLON) {
     // this is a procedure declaration
-    if (entry == (uint64_t*) 0)
+    if (entry == (struct symbol_table_t*) 0)
       // procedure never called nor declared nor defined
       createSymbolTableEntry(GLOBAL_TABLE, procedure, lineNumber, PROCEDURE, type, 0, 0);
-    else if (getType(entry) != type)
+    else if (getVariableType(entry) != type)
       // procedure already called, declared, or even defined
       // check return type but otherwise ignore
-      typeWarning(getType(entry), type);
+      typeWarning(getVariableType(entry), type);
 
     getSymbol();
 
   } else if (symbol == SYM_LBRACE) {
     // this is a procedure definition
-    if (entry == (uint64_t*) 0)
+    if (entry == (struct symbol_table_t*) 0)
       // procedure never called nor declared nor defined
       createSymbolTableEntry(GLOBAL_TABLE, procedure, lineNumber, PROCEDURE, type, 0, binaryLength);
     else {
       // procedure already called or declared or defined
-      if (getAddress(entry) != 0) {
+      if (entry -> address != 0) {
         // procedure already called or defined
-        if (getOpcode(loadInstruction(getAddress(entry))) == OP_JAL)
+        if (getOpcode(loadInstruction(entry -> address)) == OP_JAL)
           // procedure already called but not defined
-          fixlink_relative(getAddress(entry), binaryLength);
+          fixlink_relative(entry -> address, binaryLength);
         else
           // procedure already defined
           isUndefined = 0;
@@ -4866,13 +5438,13 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
 
       if (isUndefined) {
         // procedure already called or declared but not defined
-        setLineNumber(entry, lineNumber);
+        entry -> line = lineNumber;
 
-        if (getType(entry) != type)
-          typeWarning(getType(entry), type);
+        if (getVariableType(entry) != type)
+          typeWarning(getVariableType(entry), type);
 
-        setType(entry, type);
-        setAddress(entry, binaryLength);
+        setVariableType(entry, type);
+        entry -> address = binaryLength;
 
         if (stringCompare(procedure, (uint64_t*) "main"))
           // first source containing main procedure provides binary name
@@ -4891,7 +5463,7 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
 
     localVariables = 0;
 
-    while (symbol == SYM_UINT64) {
+    while (lookForHilf()) {
       localVariables = localVariables + 1;
 
       compile_variable(-localVariables * REGISTERSIZE);
@@ -4903,7 +5475,6 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
     }
-
     help_procedure_prologue(localVariables);
 
     // create a fixup chain for return statements
@@ -4933,120 +5504,11 @@ void compile_procedure(uint64_t* procedure, uint64_t type) {
   } else
     syntaxErrorUnexpected();
 
-  local_symbol_table = (uint64_t*) 0;
+  local_symbol_table = (struct symbol_table_t*) 0;
 
   // assert: allocatedTemporaries == 0
 }
 
-void compile_cstar() {
-  uint64_t type;
-  uint64_t* variableOrProcedureName;
-  uint64_t currentLineNumber;
-  uint64_t initialValue;
-  uint64_t* entry;
-
-  uint64_t arrayDimensionSize; // hw3
-  uint64_t totalSize;          // hw3
-
-  while (symbol != SYM_EOF) {
-    while (lookForType()) {
-      syntaxErrorUnexpected();
-
-      if (symbol == SYM_EOF)
-        exit(EXITCODE_PARSERERROR);
-      else
-        getSymbol();
-    }
-
-    if (symbol == SYM_VOID) {
-      // void identifier ...
-      // procedure declaration or definition
-      type = VOID_T;
-
-      getSymbol();
-
-      if (symbol == SYM_IDENTIFIER) {
-        variableOrProcedureName = identifier;
-
-        getSymbol();
-
-        compile_procedure(variableOrProcedureName, type);
-      } else
-        syntaxErrorSymbol(SYM_IDENTIFIER);
-    } else {
-      type = compile_type();
-
-        if (symbol == SYM_IDENTIFIER) {
-          variableOrProcedureName = identifier;
-
-          getSymbol();
-
-          // hw3 start
-          // type identifier "["
-          if(symbol == SYM_LBRACKET){
-            totalSize = 1;
-            arrayDimensionSize = 0;
-            arrayDeklaration = 1;
-            //uint64_t createSymbolTableEntry(int which, uint64_t string, int line, int class, int type, int value, int address);
-            entry = createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, currentLineNumber, ARRAY, type, 0, 0);
-
-            while(symbol == SYM_LBRACKET){
-              arrayDimensionSize = compile_selector_declaration(0, entry);
-              //write the new size into the linked list for size in the symbol table entry
-              addArrayDimension(entry, arrayDimensionSize);
-              totalSize = totalSize * arrayDimensionSize;
-            }
-            //add the needed memory for the array to calculate the offset of gp pointer
-            allocatedMemory = allocatedMemory + REGISTERSIZE * totalSize;
-            setAddress(entry, -allocatedMemory);
-
-            arrayDeklaration = 0;
-
-            if(symbol != SYM_SEMICOLON){
-              syntaxErrorSymbol(SYM_SEMICOLON);
-
-              exit(-1);
-            }
-            getSymbol();
-            // hw3 end
-          } else if(symbol == SYM_LPARENTHESIS){
-              // type identifier "(" ...
-              // procedure declaration or definition
-              compile_procedure(variableOrProcedureName, type);
-          } else {
-            currentLineNumber = lineNumber;
-
-            if (symbol == SYM_SEMICOLON) {
-            // type identifier ";" ...
-            // global variable declaration
-            getSymbol();
-
-            initialValue = 0;
-          } else
-            // type identifier "=" ...
-            // global variable definition
-            initialValue = compile_initialization(type);
-
-          entry = searchSymbolTable(global_symbol_table, variableOrProcedureName, VARIABLE);
-
-          if (entry == (uint64_t*) 0) {
-            allocatedMemory = allocatedMemory + REGISTERSIZE;
-
-            createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, currentLineNumber, VARIABLE, type, initialValue, -allocatedMemory);
-          } else {
-            // global variable already declared or defined
-            printLineNumber((uint64_t*) "warning", currentLineNumber);
-            print((uint64_t*) "redefinition of global variable ");
-            print(variableOrProcedureName);
-            print((uint64_t*) " ignored");
-            println();
-          }
-        }
-      } else
-        syntaxErrorSymbol(SYM_IDENTIFIER);
-    }
-  }
-}
 
 // -----------------------------------------------------------------
 // ------------------------ MACHINE CODE LIBRARY -------------------
@@ -5071,7 +5533,7 @@ void emitStart() {
   uint64_t padding;
   uint64_t lower;
   uint64_t upper;
-  uint64_t* entry;
+struct symbol_table_t* entry;
 
   // fixup jump at address 0 to here
   fixup_relative_JFormat(0, binaryLength);
@@ -5224,8 +5686,6 @@ void selfie_compile() {
       print((uint64_t*) " global variables, ");
       printInteger(numberOfProcedures);
       print((uint64_t*) " procedures, ");
-      printInteger(numberOfArrays);   // hw3
-      print((uint64_t*) " arrays, "); // hw3
       printInteger(numberOfStrings);
       print((uint64_t*) " string literals");
       println();
@@ -5610,7 +6070,7 @@ void resetInstructionCounters() {
   ic_sll   = 0; // hw1
   ic_srl   = 0; // hw1
 }
-// hw1
+
 uint64_t getTotalNumberOfInstructions() {
   return ic_lui + ic_addi + ic_add + ic_sub + ic_mul + ic_divu + ic_remu + ic_sltu + ic_ld + ic_sd + ic_beq + ic_jal + ic_jalr + ic_ecall +ic_sll + ic_srl;
 }
@@ -5655,11 +6115,12 @@ void printInstructionCounters() {
   print((uint64_t*) ", ");
   printInstructionCounter(ic, ic_remu, (uint64_t*) "remu");
   println();
+  //HW1
   print(selfieName);
   print((uint64_t*) ": shift: ");
-  printInstructionCounter(ic, ic_sll, (uint64_t*) "sll"); // hw1
+  printInstructionCounter(ic, ic_sll, (uint64_t*) "sll");
   print((uint64_t*) ", ");
-  printInstructionCounter(ic, ic_srl, (uint64_t*) "srl"); // hw1
+  printInstructionCounter(ic, ic_srl, (uint64_t*) "srl");
   print((uint64_t*) ", ");
   println();
 
@@ -5758,7 +6219,7 @@ void emitSUB(uint64_t rd, uint64_t rs1, uint64_t rs2) {
 
   ic_sub = ic_sub + 1;
 }
-// hw1 start
+//hw1 start
 void emitSLL(uint64_t rd, uint64_t rs1, uint64_t rs2) {
   emitInstruction(encodeRFormat(F7_SLL, rs2, rs1, F3_SLL, rd, OP_OP));
 
@@ -5769,8 +6230,7 @@ void emitSRL(uint64_t rd, uint64_t rs1, uint64_t rs2) {
 
   ic_srl = ic_srl + 1;
 }
-// hw2 end
-
+// hw1 end
 void emitMUL(uint64_t rd, uint64_t rs1, uint64_t rs2) {
   emitInstruction(encodeRFormat(F7_MUL, rs2, rs1, F3_MUL, rd, OP_OP));
 
@@ -5884,7 +6344,7 @@ uint64_t copyStringToBinary(uint64_t* s, uint64_t baddr) {
 }
 
 void emitGlobalsStrings() {
-  uint64_t* entry;
+  struct symbol_table_t* entry;
   uint64_t i;
   uint64_t totalSize;
 
@@ -5894,21 +6354,21 @@ void emitGlobalsStrings() {
 
   // allocate space for global variables and copy strings and big integers
   while ((uint64_t) entry != 0) {
-    if (getClass(entry) == VARIABLE) {
-      storeData(binaryLength, getValue(entry));
+    if (entry -> class == VARIABLE) {
+      storeData(binaryLength, entry -> value);
 
       binaryLength = binaryLength + REGISTERSIZE;
-    } else if (getClass(entry) == STRING)
-      binaryLength = copyStringToBinary(getString(entry), binaryLength);
-    else if (getClass(entry) == BIGINT) {
-      storeData(binaryLength, getValue(entry));
+    } else if (entry -> class == STRING)
+      binaryLength = copyStringToBinary(entry -> string, binaryLength);
+    else if (entry -> class == BIGINT) {
+      storeData(binaryLength, entry -> value);
 
       binaryLength = binaryLength + REGISTERSIZE;
-    // hw3 start
+    //hw3 start
     //allocate space for arrays and initialize it with 0
-  } else if (getClass(entry) == ARRAY){
+  } else if (entry -> class == ARRAY){
     i = 0;
-    totalSize = getTotalSizeOfArray(entry);
+    totalSize = entry -> totalSize;
     while(i < totalSize){
       storeData(binaryLength, 0);
 
@@ -5916,9 +6376,9 @@ void emitGlobalsStrings() {
       i = i +1;
     }
   }
-  // hw3 end
+  //hw3 end
 
-    entry = getNextEntry(entry);
+    entry = entry -> next;
   }
 
   // assert: binaryLength == n + allocatedMemory
@@ -7037,7 +7497,7 @@ void do_sub() {
 
   ic_sub = ic_sub + 1;
 }
-// hw1 start
+//HW1
 void do_sll() {
   if (rd != REG_ZR)
     // semantics of mul
@@ -7060,7 +7520,7 @@ void do_srl() {
 
   ic_srl = ic_srl + 1;
 }
-// hw1 end
+
 void do_mul() {
   if (rd != REG_ZR)
     // semantics of mul
@@ -7759,7 +8219,7 @@ void decode_execute() {
           do_divu();
 
         return;
-      }// hw1 start
+      }//hw1
       else if(funct7 == F7_SRL){
         if (debug) {
           if (record) {
@@ -7778,7 +8238,7 @@ void decode_execute() {
           do_srl();
 
         return;
-      } // hw1 end
+    }
     } else if (funct3 == F3_REMU) {
       if (funct7 == F7_REMU) {
         if (debug) {
@@ -7823,7 +8283,7 @@ void decode_execute() {
 
         return;
       }
-    }  // hw1
+    }  //HW1
       else if (funct3 == F3_SLL) {
         if (funct7 == F7_SLL) {
           if (debug) {
