@@ -8,9 +8,9 @@ This is the grammar of the C Star (C\*) programming language.
 
 C\* is a tiny subset of the programming language C. C\* features global variable declarations with optional initialization as well as procedures with parameters and local variables. C\* has five statements (assignment, while loop, if-then-else, procedure call, and return) and standard arithmetic (`+`, `-`, `*`, `/`, `%`) and comparison (`==`, `!=`, `<`, `<=`, `>`, `>=`) operators. C\* includes the unary `*` operator for dereferencing pointers hence the name but excludes data types other than `uint64_t` and `uint64_t*`, bitwise and Boolean operators, and many other features. The C\* grammar is LL(1) with six keywords and 22 symbols. Whitespace is ignored including one-line comments (`//`).
 
-C\* Keywords: `uint64_t`, `while`, `if`, `else`, `return`, `void`
+C\* Keywords: `uint64_t`, `while`, `if`, `else`, `return`, `void`, `struct`
 
-C\* Symbols: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<`, `<=`, `>`, `>=`, `,`, `(`, `)`, `{`, `}`, `;`, `integer`, `character`, `string`, `identifier`
+C\* Symbols: `=`, `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `<`, `<=`, `>`, `>=`, `<<`, `>>`, `,`, `(`, `)`, `{`, `}`, `[``, `]``, `;`, `integer`, `character`, `string`, `identifier`
 
 with:
 
@@ -35,10 +35,15 @@ letter = "a" | ... | "z" | "A" | ... | "Z" .
 C\* Grammar:
 
 ```
-cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
-                   ( "void" | type ) identifier procedure } .
+cstar            = { type identifier [ selector | ( "=" [ cast ] [ "-" ] literal ) ] ";" |
+                   ( "void" | type ) identifier procedure | type identifier { selector } ";" |
+                      "struct" identifier ( "*" identifier [selector] | "{" { type identifier ";" } "}" ) ";"} .
 
-type             = "uint64_t" [ "*" ] .
+structAccess        = { "->" identifier } .
+
+type             = "uint64_t" [ "*" ] | "struct" identifier "*" .
+
+selector         = { "[" simpleExpression "]" } .
 
 cast             = "(" type ")" .
 
@@ -50,19 +55,21 @@ procedure        = "(" [ variable { "," variable } ] ")"
 variable         = type identifier .
 
 statement        = call ";" | while | if | return ";" |
-                   ( [ "*" ] identifier | "*" "(" expression ")" )
+                   ( [ "*" ] identifier [ { selector } [structAccess] | structAccess ] | "*" "(" expression ")" )
                      "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
-expression       = simpleExpression [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) simpleExpression ] .
+expression       = bitwiseShift [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) bitwiseShift ] .
+
+bitwiseShift     = simpleExpression { ( "<<" | ">>" ) simpleExpression } .
 
 simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+                    ( [ "*" ] ( identifier [ { selector } [structAccess] | structAccess ] | "(" expression ")" ) |
                       call |
                       literal |
                       string ) .
