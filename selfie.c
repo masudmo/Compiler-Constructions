@@ -149,29 +149,29 @@ uint64_t* zalloc(uint64_t size);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-uint64_t CHAR_EOF          =  -1; // end of file
-uint64_t CHAR_TAB          =   9; // ASCII code 9  = tabulator
-uint64_t CHAR_LF           =  10; // ASCII code 10 = line feed
-uint64_t CHAR_CR           =  13; // ASCII code 13 = carriage return
-uint64_t CHAR_SPACE        = ' ';
-uint64_t CHAR_SEMICOLON    = ';';
-uint64_t CHAR_PLUS         = '+';
-uint64_t CHAR_DASH         = '-';
-uint64_t CHAR_ASTERISK     = '*';
-uint64_t CHAR_SLASH        = '/';
-uint64_t CHAR_UNDERSCORE   = '_';
-uint64_t CHAR_EQUAL        = '=';
-uint64_t CHAR_LPARENTHESIS = '(';
-uint64_t CHAR_RPARENTHESIS = ')';
-uint64_t CHAR_LBRACE       = '{';
-uint64_t CHAR_RBRACE       = '}';
-uint64_t CHAR_COMMA        = ',';
-uint64_t CHAR_LT           = '<';
-uint64_t CHAR_GT           = '>';
-uint64_t CHAR_EXCLAMATION  = '!';
-uint64_t CHAR_PERCENTAGE   = '%';
-uint64_t CHAR_SINGLEQUOTE  =  39; // ASCII code 39 = '
-uint64_t CHAR_DOUBLEQUOTE  = '"';
+uint64_t CHAR_EOF               =  -1; // end of file
+uint64_t CHAR_TAB               =   9; // ASCII code 9  = tabulator
+uint64_t CHAR_LF                =  10; // ASCII code 10 = line feed
+uint64_t CHAR_CR                =  13; // ASCII code 13 = carriage return
+uint64_t CHAR_SPACE             = ' ';
+uint64_t CHAR_SEMICOLON         = ';';
+uint64_t CHAR_PLUS              = '+';
+uint64_t CHAR_DASH              = '-';
+uint64_t CHAR_ASTERISK          = '*';
+uint64_t CHAR_SLASH             = '/';
+uint64_t CHAR_UNDERSCORE        = '_';
+uint64_t CHAR_EQUAL             = '=';
+uint64_t CHAR_LPARENTHESIS      = '(';
+uint64_t CHAR_RPARENTHESIS      = ')';
+uint64_t CHAR_LBRACE            = '{';
+uint64_t CHAR_RBRACE            = '}';
+uint64_t CHAR_COMMA             = ',';
+uint64_t CHAR_LT                = '<';
+uint64_t CHAR_GT                = '>';
+uint64_t CHAR_EXCLAMATION       = '!';
+uint64_t CHAR_PERCENTAGE        = '%';
+uint64_t CHAR_SINGLEQUOTE       =  39; // ASCII code 39 = '
+uint64_t CHAR_DOUBLEQUOTE       = '"';
 
 uint64_t CPUBITWIDTH = 64;
 
@@ -306,35 +306,37 @@ void getSymbol();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-uint64_t SYM_EOF          = -1; // end of file
-uint64_t SYM_IDENTIFIER   = 0;  // identifier
-uint64_t SYM_INTEGER      = 1;  // integer
-uint64_t SYM_VOID         = 2;  // void
-uint64_t SYM_UINT64       = 3;  // uint64_t
-uint64_t SYM_SEMICOLON    = 4;  // ;
-uint64_t SYM_IF           = 5;  // if
-uint64_t SYM_ELSE         = 6;  // else
-uint64_t SYM_PLUS         = 7;  // +
-uint64_t SYM_MINUS        = 8;  // -
-uint64_t SYM_ASTERISK     = 9;  // *
-uint64_t SYM_DIV          = 10; // /
-uint64_t SYM_EQUALITY     = 11; // ==
-uint64_t SYM_ASSIGN       = 12; // =
-uint64_t SYM_LPARENTHESIS = 13; // (
-uint64_t SYM_RPARENTHESIS = 14; // )
-uint64_t SYM_LBRACE       = 15; // {
-uint64_t SYM_RBRACE       = 16; // }
-uint64_t SYM_WHILE        = 17; // while
-uint64_t SYM_RETURN       = 18; // return
-uint64_t SYM_COMMA        = 19; // ,
-uint64_t SYM_LT           = 20; // <
-uint64_t SYM_LEQ          = 21; // <=
-uint64_t SYM_GT           = 22; // >
-uint64_t SYM_GEQ          = 23; // >=
-uint64_t SYM_NOTEQ        = 24; // !=
-uint64_t SYM_MOD          = 25; // %
-uint64_t SYM_CHARACTER    = 26; // character
-uint64_t SYM_STRING       = 27; // string
+uint64_t SYM_EOF               = -1; // end of file
+uint64_t SYM_IDENTIFIER        = 0;  // identifier
+uint64_t SYM_INTEGER           = 1;  // integer
+uint64_t SYM_VOID              = 2;  // void
+uint64_t SYM_UINT64            = 3;  // uint64_t
+uint64_t SYM_SEMICOLON         = 4;  // ;
+uint64_t SYM_IF                = 5;  // if
+uint64_t SYM_ELSE              = 6;  // else
+uint64_t SYM_PLUS              = 7;  // +
+uint64_t SYM_MINUS             = 8;  // -
+uint64_t SYM_ASTERISK          = 9;  // *
+uint64_t SYM_DIV               = 10; // /
+uint64_t SYM_EQUALITY          = 11; // ==
+uint64_t SYM_ASSIGN            = 12; // =
+uint64_t SYM_LPARENTHESIS      = 13; // (
+uint64_t SYM_RPARENTHESIS      = 14; // )
+uint64_t SYM_LBRACE            = 15; // {
+uint64_t SYM_RBRACE            = 16; // }
+uint64_t SYM_WHILE             = 17; // while
+uint64_t SYM_RETURN            = 18; // return
+uint64_t SYM_COMMA             = 19; // ,
+uint64_t SYM_LT                = 20; // <
+uint64_t SYM_LEQ               = 21; // <=
+uint64_t SYM_GT                = 22; // >
+uint64_t SYM_GEQ               = 23; // >=
+uint64_t SYM_NOTEQ             = 24; // !=
+uint64_t SYM_MOD               = 25; // %
+uint64_t SYM_CHARACTER         = 26; // character
+uint64_t SYM_STRING            = 27; // string
+uint64_t SYM_BITWISELEFTSHIFT  = 28; // << // hw2
+uint64_t SYM_BITWISERIGHTSHIFT = 29; // >> // hw2
 
 uint64_t* SYMBOLS; // strings representing symbols
 
@@ -370,36 +372,38 @@ uint64_t  sourceFD   = 0;             // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = smalloc((SYM_STRING + 1) * SIZEOFUINT64STAR);
+  SYMBOLS = smalloc((SYM_BITWISERIGHTSHIFT + 1) * SIZEOFUINT64STAR); // hw2
 
-  *(SYMBOLS + SYM_IDENTIFIER)   = (uint64_t) "identifier";
-  *(SYMBOLS + SYM_INTEGER)      = (uint64_t) "integer";
-  *(SYMBOLS + SYM_VOID)         = (uint64_t) "void";
-  *(SYMBOLS + SYM_UINT64)       = (uint64_t) "uint64_t";
-  *(SYMBOLS + SYM_SEMICOLON)    = (uint64_t) ";";
-  *(SYMBOLS + SYM_IF)           = (uint64_t) "if";
-  *(SYMBOLS + SYM_ELSE)         = (uint64_t) "else";
-  *(SYMBOLS + SYM_PLUS)         = (uint64_t) "+";
-  *(SYMBOLS + SYM_MINUS)        = (uint64_t) "-";
-  *(SYMBOLS + SYM_ASTERISK)     = (uint64_t) "*";
-  *(SYMBOLS + SYM_DIV)          = (uint64_t) "/";
-  *(SYMBOLS + SYM_EQUALITY)     = (uint64_t) "==";
-  *(SYMBOLS + SYM_ASSIGN)       = (uint64_t) "=";
-  *(SYMBOLS + SYM_LPARENTHESIS) = (uint64_t) "(";
-  *(SYMBOLS + SYM_RPARENTHESIS) = (uint64_t) ")";
-  *(SYMBOLS + SYM_LBRACE)       = (uint64_t) "{";
-  *(SYMBOLS + SYM_RBRACE)       = (uint64_t) "}";
-  *(SYMBOLS + SYM_WHILE)        = (uint64_t) "while";
-  *(SYMBOLS + SYM_RETURN)       = (uint64_t) "return";
-  *(SYMBOLS + SYM_COMMA)        = (uint64_t) ",";
-  *(SYMBOLS + SYM_LT)           = (uint64_t) "<";
-  *(SYMBOLS + SYM_LEQ)          = (uint64_t) "<=";
-  *(SYMBOLS + SYM_GT)           = (uint64_t) ">";
-  *(SYMBOLS + SYM_GEQ)          = (uint64_t) ">=";
-  *(SYMBOLS + SYM_NOTEQ)        = (uint64_t) "!=";
-  *(SYMBOLS + SYM_MOD)          = (uint64_t) "%";
-  *(SYMBOLS + SYM_CHARACTER)    = (uint64_t) "character";
-  *(SYMBOLS + SYM_STRING)       = (uint64_t) "string";
+  *(SYMBOLS + SYM_IDENTIFIER)        = (uint64_t) "identifier";
+  *(SYMBOLS + SYM_INTEGER)           = (uint64_t) "integer";
+  *(SYMBOLS + SYM_VOID)              = (uint64_t) "void";
+  *(SYMBOLS + SYM_UINT64)            = (uint64_t) "uint64_t";
+  *(SYMBOLS + SYM_SEMICOLON)         = (uint64_t) ";";
+  *(SYMBOLS + SYM_IF)                = (uint64_t) "if";
+  *(SYMBOLS + SYM_ELSE)              = (uint64_t) "else";
+  *(SYMBOLS + SYM_PLUS)              = (uint64_t) "+";
+  *(SYMBOLS + SYM_MINUS)             = (uint64_t) "-";
+  *(SYMBOLS + SYM_ASTERISK)          = (uint64_t) "*";
+  *(SYMBOLS + SYM_DIV)               = (uint64_t) "/";
+  *(SYMBOLS + SYM_EQUALITY)          = (uint64_t) "==";
+  *(SYMBOLS + SYM_ASSIGN)            = (uint64_t) "=";
+  *(SYMBOLS + SYM_LPARENTHESIS)      = (uint64_t) "(";
+  *(SYMBOLS + SYM_RPARENTHESIS)      = (uint64_t) ")";
+  *(SYMBOLS + SYM_LBRACE)            = (uint64_t) "{";
+  *(SYMBOLS + SYM_RBRACE)            = (uint64_t) "}";
+  *(SYMBOLS + SYM_WHILE)             = (uint64_t) "while";
+  *(SYMBOLS + SYM_RETURN)            = (uint64_t) "return";
+  *(SYMBOLS + SYM_COMMA)             = (uint64_t) ",";
+  *(SYMBOLS + SYM_LT)                = (uint64_t) "<";
+  *(SYMBOLS + SYM_LEQ)               = (uint64_t) "<=";
+  *(SYMBOLS + SYM_GT)                = (uint64_t) ">";
+  *(SYMBOLS + SYM_GEQ)               = (uint64_t) ">=";
+  *(SYMBOLS + SYM_NOTEQ)             = (uint64_t) "!=";
+  *(SYMBOLS + SYM_MOD)               = (uint64_t) "%";
+  *(SYMBOLS + SYM_CHARACTER)         = (uint64_t) "character";
+  *(SYMBOLS + SYM_STRING)            = (uint64_t) "string";
+  *(SYMBOLS + SYM_BITWISELEFTSHIFT)  = (uint64_t) "<<"; // hw2
+  *(SYMBOLS + SYM_BITWISERIGHTSHIFT) = (uint64_t) ">>"; // hw2
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -514,6 +518,7 @@ uint64_t isLiteral();
 uint64_t isStarOrDivOrModulo();
 uint64_t isPlusOrMinus();
 uint64_t isComparison();
+uint64_t isBitwiseShift(); // hw2
 
 uint64_t lookForFactor();
 uint64_t lookForStatement();
@@ -540,6 +545,7 @@ uint64_t compile_call(uint64_t* procedure);
 uint64_t compile_factor();
 uint64_t compile_term();
 uint64_t compile_simpleExpression();
+uint64_t compile_bitwiseShift();
 uint64_t compile_expression();
 void     compile_while();
 void     compile_if();
@@ -1522,7 +1528,7 @@ uint64_t getBits(uint64_t n, uint64_t i, uint64_t b) {
     // shift to-be-loaded bits all the way to the left
     // to reset all bits to the left of them, then
     // shift to-be-loaded bits all the way to the right and return
-    return rightShift(leftShift(n, CPUBITWIDTH - (i + b)), CPUBITWIDTH - b);
+    return (n << CPUBITWIDTH - (i + b)) >> CPUBITWIDTH - b;
 }
 
 uint64_t getLowWord(uint64_t n) {
@@ -1620,7 +1626,7 @@ uint64_t* storeCharacter(uint64_t* s, uint64_t i, uint64_t c) {
 
   // subtract the to-be-overwritten character to reset its bits in s
   // then add c to set its bits at the i-th position in s
-  *(s + a) = (*(s + a) - leftShift(loadCharacter(s, i), (i % SIZEOFUINT64) * 8)) + leftShift(c, (i % SIZEOFUINT64) * 8);
+  *(s + a) = (*(s + a) - (loadCharacter(s, i) << (i % SIZEOFUINT64) * 8)) + (c << (i % SIZEOFUINT64) * 8);
 
   return s;
 }
@@ -2464,7 +2470,12 @@ void getSymbol() {
           getCharacter();
 
           symbol = SYM_LEQ;
-        } else
+        } else if ( character == CHAR_LT){
+          getCharacter();
+
+          symbol = SYM_BITWISELEFTSHIFT; // hw2
+        }
+        else
           symbol = SYM_LT;
 
       } else if (character == CHAR_GT) {
@@ -2474,7 +2485,12 @@ void getSymbol() {
           getCharacter();
 
           symbol = SYM_GEQ;
-        } else
+        } else if (character == CHAR_GT){
+          getCharacter();
+
+          symbol = SYM_BITWISERIGHTSHIFT; // hw2
+        }
+        else
           symbol = SYM_GT;
 
       } else if (character == CHAR_EXCLAMATION) {
@@ -2698,6 +2714,15 @@ uint64_t isComparison() {
   else if (symbol == SYM_LEQ)
     return 1;
   else if (symbol == SYM_GEQ)
+    return 1;
+  else
+    return 0;
+}
+ // hw2
+uint64_t isBitwiseShift() {
+  if (symbol == SYM_BITWISELEFTSHIFT)
+    return 1;
+  else if (symbol == SYM_BITWISERIGHTSHIFT)
     return 1;
   else
     return 0;
@@ -3426,6 +3451,98 @@ uint64_t compile_simpleExpression() {
   return ltype;
 }
 
+// hw2
+uint64_t compile_bitwiseShift() {
+  uint64_t ltype;
+  uint64_t operatorSymbol;
+  uint64_t rtype;
+
+  // assert: n = allocatedTemporaries
+
+  // optional: -
+  if (symbol == SYM_MINUS) {
+    integerIsSigned = 1;
+
+    getSymbol();
+
+    integerIsSigned = 0;
+
+    ltype = compile_simpleExpression();
+
+    if (ltype != UINT64_T) {
+      typeWarning(UINT64_T, ltype);
+
+      ltype = UINT64_T;
+    }
+
+    emitSUB(currentTemporary(), REG_ZR, currentTemporary());
+  } else
+    ltype = compile_simpleExpression();
+
+  // assert: allocatedTemporaries == n + 1
+
+  // + or -?
+  while (isBitwiseShift()) {
+    operatorSymbol = symbol;
+
+    getSymbol();
+
+    rtype = compile_simpleExpression();
+
+    // assert: allocatedTemporaries == n + 2
+
+    if (operatorSymbol == SYM_BITWISELEFTSHIFT) {
+      // if (ltype == UINT64STAR_T) {
+      //   if (rtype == UINT64_T)
+      //     // UINT64STAR_T + UINT64_T
+      //     // pointer arithmetic: factor of 2^3 of integer operand
+      //     emitLeftShiftBy(currentTemporary(), 3);
+      //   else
+      //     // UINT64STAR_T + UINT64STAR_T
+      //     syntaxErrorMessage((uint64_t*) "(uint64_t*) + (uint64_t*) is undefined");
+      // } else if (rtype == UINT64STAR_T) {
+      //   // UINT64_T + UINT64STAR_T
+      //   // pointer arithmetic: factor of 2^3 of integer operand
+      //   emitLeftShiftBy(previousTemporary(), 3);
+      //
+      //   ltype = UINT64STAR_T;
+      // }
+
+      emitSLL(previousTemporary(), previousTemporary(), currentTemporary());
+
+    } else if (operatorSymbol == SYM_BITWISERIGHTSHIFT) {
+      // if (ltype == UINT64STAR_T) {
+      //   if (rtype == UINT64_T) {
+      //     // UINT64STAR_T - UINT64_T
+      //     // pointer arithmetic: factor of 2^3 of integer operand
+      //     emitLeftShiftBy(currentTemporary(), 3);
+      //     emitSUB(previousTemporary(), previousTemporary(), currentTemporary());
+      //   } else {
+      //     // UINT64STAR_T - UINT64STAR_T
+      //     // pointer arithmetic: (left_term - right_term) / SIZEOFUINT64
+      //     emitSUB(previousTemporary(), previousTemporary(), currentTemporary());
+      //     emitADDI(currentTemporary(), REG_ZR, SIZEOFUINT64);
+      //     emitDIVU(previousTemporary(), previousTemporary(), currentTemporary());
+      //
+      //     ltype = UINT64_T;
+      //   }
+      // } else if (rtype == UINT64STAR_T)
+      //   // UINT64_T - UINT64STAR_T
+      //   syntaxErrorMessage((uint64_t*) "(uint64_t) - (uint64_t*) is undefined");
+      // else
+        // UINT64_T - UINT64_T
+        emitSRL(previousTemporary(), previousTemporary(), currentTemporary());
+    }
+
+    tfree(1);
+  }
+
+  // assert: allocatedTemporaries == n + 1
+
+  return ltype;
+}
+// hw2
+
 uint64_t compile_expression() {
   uint64_t ltype;
   uint64_t operatorSymbol;
@@ -3433,7 +3550,7 @@ uint64_t compile_expression() {
 
   // assert: n = allocatedTemporaries
 
-  ltype = compile_simpleExpression();
+  ltype = compile_bitwiseShift(); // hw2
 
   // assert: allocatedTemporaries == n + 1
 
@@ -3443,7 +3560,7 @@ uint64_t compile_expression() {
 
     getSymbol();
 
-    rtype = compile_simpleExpression();
+    rtype = compile_bitwiseShift(); // hw2
 
     // assert: allocatedTemporaries == n + 2
 
@@ -4466,7 +4583,7 @@ uint64_t encodeRFormat(uint64_t funct7, uint64_t rs2, uint64_t rs1, uint64_t fun
   // assert: 0 <= rd < 2^5
   // assert: 0 <= opcode < 2^7
 
-  return leftShift(leftShift(leftShift(leftShift(leftShift(funct7, 5) + rs2, 5) + rs1, 3) + funct3, 5) + rd, 7) + opcode;
+  return (((((funct7 << 5) + rs2 << 5) + rs1 << 3) + funct3 << 5) + rd << 7) + opcode;
 }
 
 uint64_t getFunct7(uint64_t instruction) {
@@ -4523,7 +4640,7 @@ uint64_t encodeIFormat(uint64_t immediate, uint64_t rs1, uint64_t funct3, uint64
 
   immediate = signShrink(immediate, 12);
 
-  return leftShift(leftShift(leftShift(leftShift(immediate, 5) + rs1, 3) + funct3, 5) + rd, 7) + opcode;
+  return ((((immediate << 5) + rs1 << 3) + funct3 << 5) + rd << 7) + opcode;
 }
 
 uint64_t getImmediateIFormat(uint64_t instruction) {
@@ -4565,7 +4682,7 @@ uint64_t encodeSFormat(uint64_t immediate, uint64_t rs2, uint64_t rs1, uint64_t 
   imm1 = getBits(immediate, 5, 7);
   imm2 = getBits(immediate, 0, 5);
 
-  return leftShift(leftShift(leftShift(leftShift(leftShift(imm1, 5) + rs2, 5) + rs1, 3) + funct3, 5) + imm2, 7) + opcode;
+  return (((((imm1 << 5) + rs2 << 5) + rs1 << 3) + funct3 << 5) + imm2 << 7) + opcode;
 }
 
 uint64_t getImmediateSFormat(uint64_t instruction) {
@@ -4575,7 +4692,7 @@ uint64_t getImmediateSFormat(uint64_t instruction) {
   imm1 = getBits(instruction, 25, 7);
   imm2 = getBits(instruction,  7, 5);
 
-  return signExtend(leftShift(imm1, 5) + imm2, 12);
+  return signExtend((imm1 << 5) + imm2, 12);
 }
 
 void decodeSFormat() {
@@ -4617,7 +4734,7 @@ uint64_t encodeBFormat(uint64_t immediate, uint64_t rs2, uint64_t rs1, uint64_t 
   imm3 = getBits(immediate,  1, 4);
   imm4 = getBits(immediate, 11, 1);
 
-  return leftShift(leftShift(leftShift(leftShift(leftShift(leftShift(leftShift(imm1, 6) + imm2, 5) + rs2, 5) + rs1, 3) + funct3, 4) + imm3, 1) + imm4, 7) + opcode;
+  return (((((((imm1 << 6) + imm2 << 5) + rs2 << 5) + rs1 << 3) + funct3 << 4) + imm3 << 1) + imm4 << 7) + opcode;
 }
 
 uint64_t getImmediateBFormat(uint64_t instruction) {
@@ -4632,7 +4749,7 @@ uint64_t getImmediateBFormat(uint64_t instruction) {
   imm4 = getBits(instruction,  7, 1);
 
   // reassemble immediate and add trailing zero
-  return signExtend(leftShift(leftShift(leftShift(leftShift(imm1, 1) + imm4, 6) + imm2, 4) + imm3, 1), 13);
+  return signExtend(((((imm1 << 1) + imm4 << 6) + imm2 << 4) + imm3 << 1), 13);
 }
 
 void decodeBFormat() {
@@ -4672,7 +4789,7 @@ uint64_t encodeJFormat(uint64_t immediate, uint64_t rd, uint64_t opcode) {
   imm3 = getBits(immediate, 11,  1);
   imm4 = getBits(immediate, 12,  8);
 
-  return leftShift(leftShift(leftShift(leftShift(leftShift(imm1, 10) + imm2, 1) + imm3, 8) + imm4, 5) + rd, 7) + opcode;
+  return (((((imm1 << 10) + imm2 << 1) + imm3 << 8) + imm4 << 5) + rd << 7) + opcode;
 }
 
 uint64_t getImmediateJFormat(uint64_t instruction) {
@@ -4687,7 +4804,7 @@ uint64_t getImmediateJFormat(uint64_t instruction) {
   imm4 = getBits(instruction, 12,  8);
 
   // reassemble immediate and add trailing zero
-  return signExtend(leftShift(leftShift(leftShift(leftShift(imm1, 8) + imm4, 1) + imm3, 10) + imm2, 1), 21);
+  return signExtend(((((imm1 << 8) + imm4 << 1) + imm3 << 10) + imm2 << 1), 21);
 }
 
 void decodeJFormat() {
@@ -4718,7 +4835,7 @@ uint64_t encodeUFormat(uint64_t immediate, uint64_t rd, uint64_t opcode) {
 
   immediate = signShrink(immediate, 20);
 
-  return leftShift(leftShift(immediate, 5) + rd, 7) + opcode;
+  return ((immediate << 5) + rd << 7) + opcode;
 }
 
 uint64_t getImmediateUFormat(uint64_t instruction) {
@@ -4840,10 +4957,10 @@ void storeInstruction(uint64_t baddr, uint64_t instruction) {
 
   if (baddr % REGISTERSIZE == 0)
     // replace low word
-    temp = leftShift(getHighWord(temp), WORDSIZEINBITS) + instruction;
+    temp = (getHighWord(temp) << WORDSIZEINBITS) + instruction;
   else
     // replace high word
-    temp = leftShift(instruction, WORDSIZEINBITS) + getLowWord(temp);
+    temp = (instruction << WORDSIZEINBITS) + getLowWord(temp);
 
   *(binary + baddr / REGISTERSIZE) = temp;
 }
@@ -5064,26 +5181,26 @@ uint64_t* createELFHeader(uint64_t binaryLength) {
 
   // RISC-U ELF64 file header:
   *(header + 0) = 127                              // magic number part 0 is 0x7F
-                + leftShift((uint64_t) 'E', 8)     // magic number part 1
-                + leftShift((uint64_t) 'L', 16)    // magic number part 2
-                + leftShift((uint64_t) 'F', 24)    // magic number part 3
-                + leftShift(2, 32)                 // file class is ELFCLASS64
-                + leftShift(1, 40)                 // object file data structures endianess is ELFDATA2LSB
-                + leftShift(1, 48);                // version of the object file format
+                + ((uint64_t) 'E' << 8)     // magic number part 1
+                + ((uint64_t) 'L' << 16)    // magic number part 2
+                + ((uint64_t) 'F' << 24)    // magic number part 3
+                + ((uint64_t)   2 << 32)           // file class is ELFCLASS64
+                + ((uint64_t)   1 << 40)           // object file data structures endianess is ELFDATA2LSB
+                + ((uint64_t)   1 << 48);          // version of the object file format
   *(header + 1) = 0;                               // ABI version and start of padding bytes
   *(header + 2) = 2                                // object file type is ET_EXEC
-                + leftShift(243, 16)               // target architecture is RV64
-                + leftShift(1, 32);                // version of the object file format
+                + ((uint64_t) 243 << 16)           // target architecture is RV64
+                + ((uint64_t)   1 << 32);          // version of the object file format
   *(header + 3) = ELF_ENTRY_POINT;                 // entry point address
   *(header + 4) = 8 * SIZEOFUINT64;                // program header offset
   *(header + 5) = 0;                               // section header offset
-  *(header + 6) = leftShift(8 * SIZEOFUINT64, 32)  // elf header size
-                + leftShift(7 * SIZEOFUINT64, 48); // size of program header entry
+  *(header + 6) = (8 * SIZEOFUINT64 << 32)         // elf header size
+                + (7 * SIZEOFUINT64 << 48);        // size of program header entry
   *(header + 7) = 1;                               // number of program header entries
 
   // RISC-U ELF64 program header table:
   *(header + 8)  = 1                              // type of segment is LOAD
-                 + leftShift(7, 32);              // segment attributes is RWX
+                 + ((uint64_t)   7 << 32);        // segment attributes is RWX
   *(header + 9)  = ELF_HEADER_LEN + SIZEOFUINT64; // segment offset in file
   *(header + 10) = ELF_ENTRY_POINT;               // virtual address in memory
   *(header + 11) = 0;                             // physical address (reserved)
@@ -6070,7 +6187,7 @@ void do_lui() {
 
   if (rd != REG_ZR)
     // semantics of lui
-    *(registers + rd) = leftShift(imm, 12);
+    *(registers + rd) = imm << 12;
 
   pc = pc + INSTRUCTIONSIZE;
 
@@ -6149,7 +6266,7 @@ void print_srl_sll_add_sub_mul_divu_remu_sltu_before() {
 void do_srl() {
   if (rd != REG_ZR)
     // semantics of srl
-    *(registers + rd) = rightShift( *(registers + rs1) , *(registers + rs2));
+    *(registers + rd) = *(registers + rs1) >> *(registers + rs2);
 
   pc = pc + INSTRUCTIONSIZE;
 
@@ -6160,7 +6277,7 @@ void do_srl() {
 void do_sll() {
   if (rd != REG_ZR)
     // semantics of sll
-    *(registers + rd) = leftShift( *(registers + rs1) , *(registers + rs2));
+    *(registers + rd) = *(registers + rs1) << *(registers + rs2);
 
   pc = pc + INSTRUCTIONSIZE;
 
@@ -6577,12 +6694,12 @@ void do_jalr() {
 
   if (rd == REG_ZR)
     // fast path: just return by jumping rs1-relative with LSB reset
-    pc = leftShift(rightShift(*(registers + rs1) + imm, 1), 1);
+    pc = (*(registers + rs1) + imm >> 1) << 1;
   else {
     // slow path: first prepare jump, then link, just in case rd == rs1
 
     // prepare jump with LSB reset
-    next_pc = leftShift(rightShift(*(registers + rs1) + imm, 1), 1);
+    next_pc = (*(registers + rs1) + imm >> 1) << 1;
 
     // link to next instruction
     *(registers + rd) = pc + INSTRUCTIONSIZE;
@@ -8550,6 +8667,18 @@ uint64_t main(uint64_t argc, uint64_t* argv) {
 
   print((uint64_t*)"This is Mostafa Masud`s Selfie");
   println();
+  // print((uint64_t*)"Test _left shift: 3 << 7    = ");
+  // printInteger((uint64_t) 3 << 7);
+  // println();
+  // print((uint64_t*)"Test 3 * twoToThePowerOf(7) = ");
+  // printInteger(3 * twoToThePowerOf(7));
+  // println();
+  // print((uint64_t*)"Test right shift: 7 >> 1    = ");
+  // printInteger((uint64_t)7 >> 1);
+  // println();
+  // print((uint64_t*)"Test 7 / twoToThePowerOf(1) = ");
+  // printInteger(7 / twoToThePowerOf(1));
+  // println();
 
   return signShrink(selfie(), SYSCALL_BITWIDTH);
 }
